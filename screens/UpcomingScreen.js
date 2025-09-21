@@ -2,7 +2,7 @@ import React from 'react';
 import {
   View,
   Text,
-  ScrollView,
+  FlatList,
   Image,
   TouchableOpacity,
 } from 'react-native';
@@ -46,37 +46,27 @@ const UpcomingPage = () => {
     { id: 32, title: 'Hollow Knight Silksong', image: require('../assets/Silksong.jpg') },
   ];
 
-  const renderGameCard = (game) => {
+  const renderGameCard = ({ item }) => {
     return (
-      <TouchableOpacity key={game.id} style={styles.gameCard}>
-        <Image source={game.image} style={styles.gameImage} />
+      <TouchableOpacity style={styles.gameCard}>
+        <Image source={item.image} style={styles.gameImage} />
         <View style={styles.gameInfo}>
         </View>
       </TouchableOpacity>
     );
   };
 
-  const renderRow = (games, rowIndex) => (
-    <View key={rowIndex} style={styles.row}>
-      {games.map(game => renderGameCard(game))}
-    </View>
-  );
-
-  // Grupperer spil i rækker af 4
-  const gameRows = [];
-  for (let i = 0; i < UpcomingGames.length; i += 4) {
-    gameRows.push(UpcomingGames.slice(i, i + 4));
-  }
-
   return (
     <View style={styles.container}>
-      <ScrollView 
-        style={styles.scrollView}
+      <FlatList
+        data={UpcomingGames}
+        renderItem={renderGameCard}
+        numColumns={4}
+        keyExtractor={(item) => item.id.toString()}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
-      >
-        {gameRows.map((row, index) => renderRow(row, index))}
-      </ScrollView>
+        columnWrapperStyle={styles.row}
+      />
     </View>
   );
 };
