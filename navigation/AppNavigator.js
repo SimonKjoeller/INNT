@@ -1,6 +1,7 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createStackNavigator } from '@react-navigation/stack';
 import Icon from 'react-native-vector-icons/Ionicons';
 import navigationStyles from '../styles/navigationStyles';
 
@@ -9,8 +10,46 @@ import HomeScreen from '../screens/HomeScreen';
 import SearchScreen from '../screens/SearchScreen';
 import LibraryScreen from '../screens/LibraryScreen';
 import ProfileScreen from '../screens/ProfileScreen';
+import TrendingScreen from '../screens/TrendingScreen';
+import UpcomingScreen from '../screens/UpcomingScreen';
 
 const Tab = createBottomTabNavigator();
+const Stack = createStackNavigator();
+
+
+const SearchStack = () => {
+  return (
+    <Stack.Navigator
+      screenOptions={{
+        headerStyle: navigationStyles.headerStyle,
+        headerTintColor: navigationStyles.headerTintColor,
+        headerTitleStyle: navigationStyles.headerTitleStyle,
+      }}
+    >
+      <Stack.Screen 
+        name="SearchMain" 
+        component={SearchScreen} 
+        options={{ 
+          title: 'Search',
+        }}
+      />
+      <Stack.Screen 
+        name="Trending" 
+        component={TrendingScreen} 
+        options={{ 
+          title: 'Trending',
+        }}
+      />
+      <Stack.Screen 
+        name="Upcoming" 
+        component={UpcomingScreen} 
+        options={{ 
+          title: 'Upcoming',
+        }}
+      />
+    </Stack.Navigator>
+  );
+};
 
 const AppNavigator = () => {
   return (
@@ -50,10 +89,10 @@ const AppNavigator = () => {
         />
         <Tab.Screen 
           name="Search" 
-          component={SearchScreen}
+          component={SearchStack}
           options={{
-            title: 'Search',
             tabBarLabel: '',
+            headerShown: false, //gemmer search headeren
           }}
         />
         <Tab.Screen 

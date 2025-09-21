@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity } from 'react-native';
 import styles from '../styles/searchScreenStyles';
 
-const SearchScreen = () => {
+const SearchScreen = ({ navigation }) => {
   const [searchText, setSearchText] = useState('');
 
   return (
@@ -17,8 +17,26 @@ const SearchScreen = () => {
           returnKeyType="search"
         />
       </View>
+      
+      <View style={styles.browseSection}>
+        <Text style={styles.browseTitle}>Browse by</Text>
+        
+        <TouchableOpacity 
+          style={styles.browseOption}
+          onPress={() => navigation.navigate('Trending')}
+        >
+          <Text style={styles.browseText}>Trending Games</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity 
+          style={styles.browseOption}
+          onPress={() => navigation.navigate('Upcoming')}
+        >
+          <Text style={styles.browseText}>Upcoming Games</Text>
+        </TouchableOpacity>
+      </View>
+      
       <View style={styles.contentContainer}>
-        <Text style={styles.title}>Search Screen</Text>
         <Text style={styles.subtitle}>Type in the search bar above</Text>
       </View>
     </View>

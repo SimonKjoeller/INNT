@@ -6,7 +6,8 @@ import {
   Image,
   TouchableOpacity,
 } from 'react-native';
-import styles from '../styles/trendingPageStyles';
+import styles from '../styles/trendingScreenStyles';
+import globalStyles from '../styles/globalStyles';
 
 const TrendingPage = () => {
   //sample data
@@ -50,9 +51,6 @@ const TrendingPage = () => {
       <TouchableOpacity key={game.id} style={styles.gameCard}>
         <Image source={game.image} style={styles.gameImage} />
         <View style={styles.gameInfo}>
-          <Text style={styles.gameTitle} numberOfLines={2}>
-            {game.title}
-          </Text>
         </View>
       </TouchableOpacity>
     );
@@ -71,11 +69,15 @@ const TrendingPage = () => {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[globalStyles.container, styles.customBackground]}>
+      <View style={globalStyles.header}>
+        <Text style={globalStyles.headerTitle}>Trending Games</Text>
+        <Text style={globalStyles.headerSubtitle}>Most popular games right now</Text>
+      </View>
       <ScrollView 
-        style={styles.scrollView}
+        style={[globalStyles.scrollView, styles.scrollView]}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[globalStyles.scrollContent, styles.scrollContent]}
       >
         {gameRows.map((row, index) => renderRow(row, index))}
       </ScrollView>

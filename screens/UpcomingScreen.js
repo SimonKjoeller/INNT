@@ -9,9 +9,9 @@ import {
 import styles from '../styles/trendingScreenStyles';
 import globalStyles from '../styles/globalStyles';
 
-const TrendingPage = () => {
+const UpcomingPage = () => {
   //sample data
-  const trendingGames = [
+  const UpcomingGames = [
     { id: 1, title: 'Cyberpunk 2077', image: require('../assets/Cyberpunk_2077_box_art.jpg') },
     { id: 2, title: 'The Witcher 3', image: require('../assets/Witcher_3_cover_art.jpg') },
     { id: 3, title: 'Red Dead 2', image: require('../assets/Red_Dead.jpg') },
@@ -47,14 +47,14 @@ const TrendingPage = () => {
   ];
 
   const renderGameCard = (game) => {
-      return (
-        <TouchableOpacity key={game.id} style={styles.gameCard}>
-          <Image source={game.image} style={styles.gameImage} />
-          <View style={styles.gameInfo}>
-          </View>
-        </TouchableOpacity>
-      );
-    };
+    return (
+      <TouchableOpacity key={game.id} style={styles.gameCard}>
+        <Image source={game.image} style={styles.gameImage} />
+        <View style={styles.gameInfo}>
+        </View>
+      </TouchableOpacity>
+    );
+  };
 
   const renderRow = (games, rowIndex) => (
     <View key={rowIndex} style={styles.row}>
@@ -64,8 +64,8 @@ const TrendingPage = () => {
 
   // Grupperer spil i rækker af 4
   const gameRows = [];
-  for (let i = 0; i < trendingGames.length; i += 4) {
-    gameRows.push(trendingGames.slice(i, i + 4));
+  for (let i = 0; i < UpcomingGames.length; i += 4) {
+    gameRows.push(UpcomingGames.slice(i, i + 4));
   }
 
   return (
@@ -81,4 +81,4 @@ const TrendingPage = () => {
   );
 };
 
-export default TrendingPage;
+export default UpcomingPage;
