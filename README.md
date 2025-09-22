@@ -34,6 +34,8 @@ A React Native mobile application for browsing and discovering video games with 
    - **iOS**: Press `i` in terminal or scan QR code with Camera app
    - **Android**: Press `a` in terminal or scan QR code with Expo Go app
 
+Link til video - https://youtube.com/shorts/e34sa4TCHBM?si=DytWBdfZDxEIFZqW
 
 **Developed by Benjamin Becic Frank**  
 CBS 5. Semester - Innovation og ny teknologi
+
