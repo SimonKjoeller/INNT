@@ -18,6 +18,33 @@ const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
 
 
+const HomeStack = () => {
+  return (
+    <Stack.Navigator
+      screenOptions={{
+        headerStyle: navigationStyles.headerStyle,
+        headerTintColor: navigationStyles.headerTintColor,
+        headerTitleStyle: navigationStyles.headerTitleStyle,
+      }}
+    >
+      <Stack.Screen
+        name="HomeMain"
+        component={HomeScreen}
+        options={{
+          title: 'Home',
+        }}
+      />
+      <Stack.Screen
+        name="RateGame"
+        component={RateGameScreen}
+        options={{
+          title: 'Rate Game',
+        }}
+      />
+    </Stack.Navigator>
+  );
+};
+
 const SearchStack = () => {
   return (
     <Stack.Navigator
@@ -69,13 +96,6 @@ const LibraryStack = () => {
         }}
       />
       <Stack.Screen
-        name="GameList"
-        component={GameListScreen}
-        options={{
-          title: 'Games',
-        }}
-      />
-      <Stack.Screen
         name="RateGame"
         component={RateGameScreen}
         options={{
@@ -117,9 +137,10 @@ const AppNavigator = () => {
       >
         <Tab.Screen
           name="Home"
-          component={HomeScreen}
+          component={HomeStack}
           options={{
             tabBarLabel: '',
+            headerShown: false,
           }}
         />
         <Tab.Screen

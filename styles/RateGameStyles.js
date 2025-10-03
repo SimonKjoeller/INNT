@@ -2,21 +2,60 @@ import { StyleSheet, Dimensions } from 'react-native';
 
 const { width, height } = Dimensions.get('window');
 
-export const rateGameStyles = StyleSheet.create({
+// Shared constants
+const COLORS = {
+    background: '#1a1a1a',
+    backgroundSecondary: '#2a2a2a',
+    textPrimary: '#fff',
+    textSecondary: '#aaa',
+    textTertiary: '#666',
+    textContent: '#ccc',
+    accent: '#2a5298',
+    overlay: 'rgba(0,0,0,0.3)',
+    buttonOverlay: 'rgba(255,255,255,0.2)',
+};
+
+const SPACING = {
+    xs: 5,
+    sm: 10,
+    md: 15,
+    lg: 20,
+    xl: 30,
+};
+
+// Shared/Base styles
+const baseStyles = {
     container: {
         flex: 1,
-        backgroundColor: '#1a1a1a',
+        backgroundColor: COLORS.background,
     },
     loadingContainer: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#1a1a1a',
+        backgroundColor: COLORS.background,
     },
     loadingText: {
-        color: '#fff',
+        color: COLORS.textPrimary,
         fontSize: 18,
     },
+    gameInfoBase: {
+        flex: 1,
+    },
+    gameNameBase: {
+        color: COLORS.textPrimary,
+        fontWeight: 'bold',
+        marginBottom: SPACING.xs,
+    },
+    gameYearBase: {
+        color: COLORS.textSecondary,
+        fontSize: 14,
+    },
+};
+
+// RateGameScreen (Detail View) Styles
+export const rateGameStyles = StyleSheet.create({
+    ...baseStyles,
     headerContainer: {
         position: 'relative',
         height: height * 0.4,
@@ -30,148 +69,259 @@ export const rateGameStyles = StyleSheet.create({
     backButton: {
         position: 'absolute',
         top: 50,
-        left: 20,
+        left: SPACING.lg,
         width: 40,
         height: 40,
         borderRadius: 20,
-        backgroundColor: 'rgba(0,0,0,0.3)',
+        backgroundColor: COLORS.overlay,
         justifyContent: 'center',
         alignItems: 'center',
     },
     menuButton: {
         position: 'absolute',
         top: 50,
-        right: 20,
+        right: SPACING.lg,
         width: 40,
         height: 40,
         borderRadius: 20,
-        backgroundColor: 'rgba(0,0,0,0.3)',
+        backgroundColor: COLORS.overlay,
         justifyContent: 'center',
         alignItems: 'center',
     },
     contentContainer: {
         flexDirection: 'row',
-        paddingHorizontal: 20,
-        paddingTop: 20,
-        marginBottom: 20,
+        paddingHorizontal: SPACING.lg,
+        paddingTop: SPACING.lg,
+        marginBottom: SPACING.lg,
     },
     gameInfoContainer: {
-        flex: 1,
-        paddingRight: 20,
+        ...baseStyles.gameInfoBase,
+        paddingRight: SPACING.lg,
     },
     gameTitle: {
-        color: '#fff',
+        ...baseStyles.gameNameBase,
         fontSize: 24,
-        fontWeight: 'bold',
-        marginBottom: 5,
     },
     gameYear: {
-        color: '#aaa',
+        ...baseStyles.gameYearBase,
         fontSize: 16,
-        marginBottom: 15,
-    },
-    trailerButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: 'rgba(255,255,255,0.2)',
-        paddingHorizontal: 15,
-        paddingVertical: 8,
-        borderRadius: 20,
-        alignSelf: 'flex-start',
-    },
-    trailerText: {
-        color: '#fff',
-        fontSize: 12,
-        fontWeight: 'bold',
-        marginLeft: 5,
+        marginBottom: SPACING.md,
     },
     gameCover: {
         width: 120,
         height: 180,
-        borderRadius: 10,
+        borderRadius: SPACING.sm,
     },
-    tagline: {
-        color: '#aaa',
-        fontSize: 14,
-        fontWeight: 'bold',
-        textAlign: 'center',
-        marginHorizontal: 20,
-        marginBottom: 20,
-        letterSpacing: 1,
+    trailerButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: COLORS.buttonOverlay,
+        paddingHorizontal: SPACING.md,
+        paddingVertical: 8,
+        borderRadius: SPACING.lg,
+        alignSelf: 'flex-start',
     },
-    summary: {
-        color: '#ccc',
-        fontSize: 14,
-        lineHeight: 20,
-        marginHorizontal: 20,
-        marginBottom: 30,
-    },
-    ratingsContainer: {
-        marginHorizontal: 20,
-        marginBottom: 30,
-    },
-    ratingsTitle: {
-        color: '#aaa',
+    trailerText: {
+        color: COLORS.textPrimary,
         fontSize: 12,
         fontWeight: 'bold',
-        marginBottom: 10,
+        marginLeft: SPACING.xs,
+    },
+    tagline: {
+        color: COLORS.textSecondary,
+        fontSize: 14,
+        fontWeight: 'bold',
+        textAlign: 'center',
+        marginHorizontal: SPACING.lg,
+        marginBottom: SPACING.lg,
         letterSpacing: 1,
     },
-    ratingBar: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 10,
-    },
-    ratingValue: {
-        color: '#fff',
-        fontSize: 36,
-        fontWeight: 'bold',
-        marginRight: 15,
-    },
-    starsContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    reviewCount: {
-        color: '#aaa',
+    summaryInline: {
+        color: COLORS.textContent,
         fontSize: 14,
+        lineHeight: 18,
+        marginTop: SPACING.md,
+        flex: 1,
     },
-    userRatingContainer: {
-        marginHorizontal: 20,
-        marginBottom: 30,
+    // Action Buttons Section  
+    actionButtonsContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginHorizontal: SPACING.lg,
+        marginBottom: SPACING.xl,
+        gap: SPACING.md,
+    },
+    rateButton: {
+        flex: 1,
+        flexDirection: 'row',
         alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#2a2a2a',
+        paddingVertical: SPACING.md,
+        paddingHorizontal: SPACING.lg,
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: '#FFD700',
     },
-    userRatingTitle: {
-        color: '#fff',
+    rateButtonText: {
+        color: '#FFD700',
         fontSize: 16,
         fontWeight: 'bold',
-        marginBottom: 10,
+        marginLeft: 8,
     },
-    userStarsContainer: {
-        flexDirection: 'row',
-        justifyContent: 'center',
-        gap: 10,
-    },
-    starButton: {
-        padding: 5,
-    },
-    actionButton: {
+    wishlistButton: {
+        flex: 1,
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'space-between',
-        backgroundColor: '#2a5298',
-        marginHorizontal: 20,
-        paddingVertical: 15,
-        paddingHorizontal: 20,
-        borderRadius: 25,
-        marginBottom: 30,
+        justifyContent: 'center',
+        backgroundColor: '#2a2a2a',
+        paddingVertical: SPACING.md,
+        paddingHorizontal: SPACING.lg,
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: '#4CAF50',
     },
-    actionButtonText: {
-        color: '#fff',
+    wishlistButtonText: {
+        color: '#4CAF50',
         fontSize: 16,
-        fontWeight: '500',
+        fontWeight: 'bold',
+        marginLeft: 8,
+    },
+    // Rating Modal Styles
+    modalOverlay: {
         flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.7)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    modalContainer: {
+        backgroundColor: COLORS.backgroundSecondary,
+        borderRadius: 16,
+        padding: SPACING.xl,
+        marginHorizontal: SPACING.lg,
+        width: '85%',
+    },
+    modalTitle: {
+        color: COLORS.textPrimary,
+        fontSize: 20,
+        fontWeight: 'bold',
         textAlign: 'center',
-        marginHorizontal: 10,
+        marginBottom: SPACING.xl,
+    },
+    ratingLabel: {
+        color: COLORS.textPrimary,
+        fontSize: 16,
+        fontWeight: '600',
+        marginBottom: 8,
+    },
+    sliderContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: SPACING.xl,
+        gap: SPACING.md,
+    },
+    sliderLabel: {
+        color: COLORS.textSecondary,
+        fontSize: 14,
+        fontWeight: 'bold',
+    },
+    slider: {
+        flex: 1,
+        height: 40,
+    },
+    sliderThumb: {
+        backgroundColor: '#FFD700',
+        width: 20,
+        height: 20,
+    },
+    commentLabel: {
+        color: COLORS.textPrimary,
+        fontSize: 16,
+        fontWeight: '600',
+        marginBottom: 8,
+    },
+    commentInput: {
+        backgroundColor: COLORS.background,
+        color: COLORS.textPrimary,
+        fontSize: 14,
+        padding: SPACING.md,
+        borderRadius: 8,
+        marginBottom: SPACING.xl,
+        minHeight: 80,
+    },
+    modalButtons: {
+        flexDirection: 'row',
+        gap: SPACING.md,
+    },
+    modalButtonCancel: {
+        flex: 1,
+        backgroundColor: 'rgba(255,255,255,0.1)',
+        paddingVertical: SPACING.md,
+        borderRadius: 8,
+        alignItems: 'center',
+    },
+    modalButtonTextCancel: {
+        color: COLORS.textSecondary,
+        fontSize: 16,
+        fontWeight: '600',
+    },
+    modalButtonSubmit: {
+        flex: 1,
+        backgroundColor: COLORS.accent,
+        paddingVertical: SPACING.md,
+        borderRadius: 8,
+        alignItems: 'center',
+    },
+    modalButtonTextSubmit: {
+        color: COLORS.textPrimary,
+        fontSize: 16,
+        fontWeight: '600',
+    },
+});
+
+// RateGame Component (List View) Styles
+export const rateGameComponentStyles = StyleSheet.create({
+    ...baseStyles,
+    listContainer: {
+        paddingBottom: SPACING.lg,
+    },
+    subtitle: {
+        color: COLORS.textSecondary,
+        fontSize: 16,
+        textAlign: 'center',
+        marginBottom: SPACING.lg,
+    },
+    gameItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: COLORS.backgroundSecondary,
+        marginHorizontal: SPACING.lg,
+        marginBottom: SPACING.md,
+        borderRadius: SPACING.sm,
+        padding: SPACING.md,
+    },
+    gameCover: {
+        width: 60,
+        height: 80,
+        borderRadius: SPACING.xs,
+        marginRight: SPACING.md,
+    },
+    gameInfo: baseStyles.gameInfoBase,
+    gameName: {
+        ...baseStyles.gameNameBase,
+        fontSize: 18,
+    },
+    gameYear: {
+        ...baseStyles.gameYearBase,
+        marginBottom: 3,
+    },
+    gameReviews: {
+        color: COLORS.textTertiary,
+        fontSize: 12,
+    },
+    arrow: {
+        color: COLORS.textPrimary,
+        fontSize: 20,
+        marginLeft: SPACING.sm,
     },
 });
