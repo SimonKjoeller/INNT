@@ -12,7 +12,6 @@ import LibraryScreen from '../screens/LibraryScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import TrendingScreen from '../screens/TrendingScreen';
 import UpcomingScreen from '../screens/UpcomingScreen';
-import GameListScreen from '../screens/GameListScreen';
 import RateGameScreen from '../screens/RateGameScreen';
 
 const Tab = createBottomTabNavigator();
@@ -94,13 +93,6 @@ const LibraryStack = () => {
         component={LibraryScreen}
         options={{
           title: 'Library',
-        }}
-      />
-      <Stack.Screen
-        name="GameList"
-        component={GameListScreen}
-        options={{
-          title: 'Games',
         }}
       />
       <Stack.Screen

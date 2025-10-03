@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Image, Dimensions } from 'react-native';
 import { getDatabase, ref, get } from 'firebase/database';
 import { firebaseApp } from '../database/firebase';
-
-const { width } = Dimensions.get('window');
+import { popularGamesStyles } from '../styles/homeStyles';
 
 const PopularGames = ({ navigation }) => {
     const [popularGames, setPopularGames] = useState([]);
@@ -23,10 +22,14 @@ const PopularGames = ({ navigation }) => {
                 const gamesData = snapshot.val();
                 // Konverter til array og sorter efter reviewCount (højeste først)
                 const gamesArray = Object.keys(gamesData)
-                    .map(key => ({
-                        id: key,
-                        ...gamesData[key]
-                    }))
+                    .map(key => {
+                        const gameData = gamesData[key];
+                        return {
+                            firebaseKey: key, // Firebase key (72)
+                            id: gameData?.id || key, // Use internal ID if exists, otherwise firebase key
+                            ...gameData
+                        };
+                    })
                     .sort((a, b) => (b.reviewCount || 0) - (a.reviewCount || 0))
                     .slice(0, 10); // Tag de første 10 mest populære
 
@@ -39,8 +42,8 @@ const PopularGames = ({ navigation }) => {
         }
     };
 
-    const handleGamePress = (gameId) => {
-        navigation.navigate('RateGame', { gameId });
+    const handleGamePress = (game) => {
+        navigation.navigate('RateGame', { gameId: game.firebaseKey });
     };
 
     if (loading) {
@@ -53,90 +56,44 @@ const PopularGames = ({ navigation }) => {
     }
 
     return (
-        <View style={popularGamesStyles.container}>
-            <Text style={popularGamesStyles.title}>Popular Games</Text>
-            <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={popularGamesStyles.scrollContainer}
-            >
-                {popularGames.map((game, index) => (
-                    <TouchableOpacity
-                        key={game.id}
-                        style={[
-                            popularGamesStyles.gameCard,
-                            { marginLeft: index === 0 ? 20 : 10 },
-                            { marginRight: index === popularGames.length - 1 ? 20 : 0 }
-                        ]}
-                        onPress={() => handleGamePress(game.id)}
-                    >
-                        <Image
-                            source={{ uri: game.coverUrl }}
-                            style={popularGamesStyles.gameImage}
-                            resizeMode="cover"
-                        />
-                        <View style={popularGamesStyles.gameInfo}>
-                            <Text
-                                style={popularGamesStyles.gameName}
-                                numberOfLines={2}
-                            >
-                                {game.name}
-                            </Text>
-                            <Text style={popularGamesStyles.reviewCount}>
-                                {game.reviewCount || 0} reviews
-                            </Text>
-                        </View>
-                    </TouchableOpacity>
-                ))}
-            </ScrollView>
-        </View>
+        <ScrollView style={popularGamesStyles.homeContainer}>
+            {/* Popular Games Section */}
+            <View style={popularGamesStyles.container}>
+                <Text style={popularGamesStyles.title}>Popular Games</Text>
+                <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={popularGamesStyles.scrollContainer}
+                >
+                    {popularGames.map((game, index) => (
+                        <TouchableOpacity
+                            key={game.id}
+                            style={[
+                                popularGamesStyles.gameCard,
+                                { marginLeft: index === 0 ? 20 : 10 },
+                                { marginRight: index === popularGames.length - 1 ? 20 : 0 }
+                            ]}
+                            onPress={() => handleGamePress(game)}
+                        >
+                            <Image
+                                source={{ uri: game.coverUrl }}
+                                style={popularGamesStyles.gameImage}
+                                resizeMode="cover"
+                            />
+                            <View style={popularGamesStyles.gameInfo}>
+                                <Text
+                                    style={popularGamesStyles.gameName}
+                                    numberOfLines={2}
+                                >
+                                    {game.name}
+                                </Text>
+                            </View>
+                        </TouchableOpacity>
+                    ))}
+                </ScrollView>
+            </View>
+        </ScrollView>
     );
-};
-
-const popularGamesStyles = {
-    container: {
-        marginVertical: 20,
-    },
-    title: {
-        color: '#fff',
-        fontSize: 22,
-        fontWeight: 'bold',
-        marginLeft: 20,
-        marginBottom: 15,
-    },
-    loadingText: {
-        color: '#aaa',
-        fontSize: 16,
-        textAlign: 'center',
-        marginTop: 20,
-    },
-    scrollContainer: {
-        paddingVertical: 5,
-    },
-    gameCard: {
-        width: width * 0.3, // 30% af skærm bredde
-        marginRight: 10,
-    },
-    gameImage: {
-        width: '100%',
-        height: width * 0.45, // 1.5:1 ratio for covers
-        borderRadius: 8,
-    },
-    gameInfo: {
-        marginTop: 8,
-        paddingHorizontal: 2,
-    },
-    gameName: {
-        color: '#fff',
-        fontSize: 14,
-        fontWeight: '600',
-        marginBottom: 4,
-        lineHeight: 18,
-    },
-    reviewCount: {
-        color: '#aaa',
-        fontSize: 12,
-    },
 };
 
 export default PopularGames;

@@ -18,7 +18,3 @@ export const firebaseApp = getApps().length ? getApp() : initializeApp(firebaseC
 
 // Realtime Database (bruges automatisk korrekt region fra config)
 export const rtdb = getDatabase(firebaseApp);
-
-
-
-
