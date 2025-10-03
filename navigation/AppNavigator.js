@@ -12,6 +12,7 @@ import LibraryScreen from '../screens/LibraryScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import TrendingScreen from '../screens/TrendingScreen';
 import UpcomingScreen from '../screens/UpcomingScreen';
+import RateGameScreen from '../screens/RateGameScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -26,25 +27,59 @@ const SearchStack = () => {
         headerTitleStyle: navigationStyles.headerTitleStyle,
       }}
     >
-      <Stack.Screen 
-        name="SearchMain" 
-        component={SearchScreen} 
-        options={{ 
+      <Stack.Screen
+        name="SearchMain"
+        component={SearchScreen}
+        options={{
           title: 'Search',
         }}
       />
-      <Stack.Screen 
-        name="Trending" 
-        component={TrendingScreen} 
-        options={{ 
+      <Stack.Screen
+        name="Trending"
+        component={TrendingScreen}
+        options={{
           title: 'Trending',
         }}
       />
-      <Stack.Screen 
-        name="Upcoming" 
-        component={UpcomingScreen} 
-        options={{ 
+      <Stack.Screen
+        name="Upcoming"
+        component={UpcomingScreen}
+        options={{
           title: 'Upcoming',
+        }}
+      />
+    </Stack.Navigator>
+  );
+};
+
+const LibraryStack = () => {
+  return (
+    <Stack.Navigator
+      screenOptions={{
+        headerStyle: navigationStyles.headerStyle,
+        headerTintColor: navigationStyles.headerTintColor,
+        headerTitleStyle: navigationStyles.headerTitleStyle,
+      }}
+    >
+      <Stack.Screen
+        name="LibraryMain"
+        component={LibraryScreen}
+        options={{
+          title: 'Library',
+        }}
+      />
+      <Stack.Screen
+        name="GameList"
+        component={GameListScreen}
+        options={{
+          title: 'Games',
+        }}
+      />
+      <Stack.Screen
+        name="RateGame"
+        component={RateGameScreen}
+        options={{
+          title: 'Rate Game',
         }}
       />
     </Stack.Navigator>
@@ -80,31 +115,32 @@ const AppNavigator = () => {
           headerTitleStyle: navigationStyles.headerTitleStyle,
         })}
       >
-        <Tab.Screen 
-          name="Home" 
+        <Tab.Screen
+          name="Home"
           component={HomeScreen}
           options={{
             tabBarLabel: '',
           }}
         />
-        <Tab.Screen 
-          name="Search" 
+        <Tab.Screen
+          name="Search"
           component={SearchStack}
           options={{
             tabBarLabel: '',
             headerShown: false, //gemmer search headeren
           }}
         />
-        <Tab.Screen 
-          name="Library" 
-          component={LibraryScreen}
+        <Tab.Screen
+          name="Library"
+          component={LibraryStack}
           options={{
             title: 'Library',
             tabBarLabel: '',
+            headerShown: false,
           }}
         />
-        <Tab.Screen 
-          name="Profile" 
+        <Tab.Screen
+          name="Profile"
           component={ProfileScreen}
           options={{
             title: 'Profile',

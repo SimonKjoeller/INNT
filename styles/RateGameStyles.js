@@ -1,0 +1,177 @@
+import { StyleSheet, Dimensions } from 'react-native';
+
+const { width, height } = Dimensions.get('window');
+
+export const rateGameStyles = StyleSheet.create({
+    container: {
+        flex: 1,
+        backgroundColor: '#1a1a1a',
+    },
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#1a1a1a',
+    },
+    loadingText: {
+        color: '#fff',
+        fontSize: 18,
+    },
+    headerContainer: {
+        position: 'relative',
+        height: height * 0.4,
+        width: '100%',
+    },
+    headerImage: {
+        width: '100%',
+        height: '100%',
+        opacity: 0.8,
+    },
+    backButton: {
+        position: 'absolute',
+        top: 50,
+        left: 20,
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: 'rgba(0,0,0,0.3)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    menuButton: {
+        position: 'absolute',
+        top: 50,
+        right: 20,
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: 'rgba(0,0,0,0.3)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    contentContainer: {
+        flexDirection: 'row',
+        paddingHorizontal: 20,
+        paddingTop: 20,
+        marginBottom: 20,
+    },
+    gameInfoContainer: {
+        flex: 1,
+        paddingRight: 20,
+    },
+    gameTitle: {
+        color: '#fff',
+        fontSize: 24,
+        fontWeight: 'bold',
+        marginBottom: 5,
+    },
+    gameYear: {
+        color: '#aaa',
+        fontSize: 16,
+        marginBottom: 15,
+    },
+    trailerButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: 'rgba(255,255,255,0.2)',
+        paddingHorizontal: 15,
+        paddingVertical: 8,
+        borderRadius: 20,
+        alignSelf: 'flex-start',
+    },
+    trailerText: {
+        color: '#fff',
+        fontSize: 12,
+        fontWeight: 'bold',
+        marginLeft: 5,
+    },
+    gameCover: {
+        width: 120,
+        height: 180,
+        borderRadius: 10,
+    },
+    tagline: {
+        color: '#aaa',
+        fontSize: 14,
+        fontWeight: 'bold',
+        textAlign: 'center',
+        marginHorizontal: 20,
+        marginBottom: 20,
+        letterSpacing: 1,
+    },
+    summary: {
+        color: '#ccc',
+        fontSize: 14,
+        lineHeight: 20,
+        marginHorizontal: 20,
+        marginBottom: 30,
+    },
+    ratingsContainer: {
+        marginHorizontal: 20,
+        marginBottom: 30,
+    },
+    ratingsTitle: {
+        color: '#aaa',
+        fontSize: 12,
+        fontWeight: 'bold',
+        marginBottom: 10,
+        letterSpacing: 1,
+    },
+    ratingBar: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 10,
+    },
+    ratingValue: {
+        color: '#fff',
+        fontSize: 36,
+        fontWeight: 'bold',
+        marginRight: 15,
+    },
+    starsContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    reviewCount: {
+        color: '#aaa',
+        fontSize: 14,
+    },
+    userRatingContainer: {
+        marginHorizontal: 20,
+        marginBottom: 30,
+        alignItems: 'center',
+    },
+    userRatingTitle: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: 'bold',
+        marginBottom: 10,
+    },
+    userStarsContainer: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        gap: 10,
+    },
+    starButton: {
+        padding: 5,
+    },
+    actionButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        backgroundColor: '#2a5298',
+        marginHorizontal: 20,
+        paddingVertical: 15,
+        paddingHorizontal: 20,
+        borderRadius: 25,
+        marginBottom: 30,
+    },
+    actionButtonText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: '500',
+        flex: 1,
+        textAlign: 'center',
+        marginHorizontal: 10,
+    },
+});
