@@ -12,11 +12,39 @@ import LibraryScreen from '../screens/LibraryScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import TrendingScreen from '../screens/TrendingScreen';
 import UpcomingScreen from '../screens/UpcomingScreen';
+import GameListScreen from '../screens/GameListScreen';
 import RateGameScreen from '../screens/RateGameScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
 
+
+const HomeStack = () => {
+  return (
+    <Stack.Navigator
+      screenOptions={{
+        headerStyle: navigationStyles.headerStyle,
+        headerTintColor: navigationStyles.headerTintColor,
+        headerTitleStyle: navigationStyles.headerTitleStyle,
+      }}
+    >
+      <Stack.Screen
+        name="HomeMain"
+        component={HomeScreen}
+        options={{
+          title: 'Home',
+        }}
+      />
+      <Stack.Screen
+        name="RateGame"
+        component={RateGameScreen}
+        options={{
+          title: 'Rate Game',
+        }}
+      />
+    </Stack.Navigator>
+  );
+};
 
 const SearchStack = () => {
   return (
@@ -115,11 +143,12 @@ const AppNavigator = () => {
           headerTitleStyle: navigationStyles.headerTitleStyle,
         })}
       >
-        <Tab.Screen
-          name="Home"
-          component={HomeScreen}
+        <Tab.Screen 
+          name="Home" 
+          component={HomeStack}
           options={{
             tabBarLabel: '',
+            headerShown: false,
           }}
         />
         <Tab.Screen

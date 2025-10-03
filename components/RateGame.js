@@ -17,7 +17,7 @@ const RateGameComponent = ({ navigation }) => {
             const database = getDatabase(firebaseApp);
             const gamesRef = ref(database, 'games');
             const snapshot = await get(gamesRef);
-            
+
             if (snapshot.exists()) {
                 const gamesData = snapshot.val();
                 // Konverter object til array med keys som id

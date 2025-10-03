@@ -20,13 +20,13 @@ const RateGameScreen = ({ route, navigation }) => {
             const database = getDatabase(firebaseApp);
             const gameRef = ref(database, `games/${gameId}`);
             const userRatingRef = ref(database, `userRatings/${gameId}/user1`);
-            
+
             // Hent spil data og bruger rating parallelt
             const [gameSnapshot, ratingSnapshot] = await Promise.all([
                 get(gameRef),
                 get(userRatingRef)
             ]);
-            
+
             if (gameSnapshot.exists()) {
                 setGameData(gameSnapshot.val());
             } else {
@@ -48,12 +48,12 @@ const RateGameScreen = ({ route, navigation }) => {
         try {
             const database = getDatabase(firebaseApp);
             const userRatingRef = ref(database, `userRatings/${gameId}/user1`); // user1 som temp bruger
-            
+
             await set(userRatingRef, {
                 rating: rating,
                 timestamp: new Date().toISOString(),
             });
-            
+
             Alert.alert('Success', `You rated this game ${rating} stars!`);
         } catch (error) {
             console.error('Error saving rating:', error);
