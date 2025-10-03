@@ -143,8 +143,8 @@ const AppNavigator = () => {
           headerTitleStyle: navigationStyles.headerTitleStyle,
         })}
       >
-        <Tab.Screen 
-          name="Home" 
+        <Tab.Screen
+          name="Home"
           component={HomeStack}
           options={{
             tabBarLabel: '',

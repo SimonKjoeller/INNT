@@ -10,9 +10,9 @@ const HomeScreen = ({ navigation }) => {
         <Text style={styles.title}>Discover</Text>
         <Text style={homeScreenStyles.subtitle}>Find your next favorite game</Text>
       </View>
-      
+
       <PopularGames navigation={navigation} />
-      
+
       {/* Her kan du tilføje flere kategorier senere */}
       {/* <TrendingGames navigation={navigation} /> */}
       {/* <RecentGames navigation={navigation} /> */}

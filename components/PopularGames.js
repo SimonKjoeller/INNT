@@ -18,7 +18,7 @@ const PopularGames = ({ navigation }) => {
             const database = getDatabase(firebaseApp);
             const gamesRef = ref(database, 'games');
             const snapshot = await get(gamesRef);
-            
+
             if (snapshot.exists()) {
                 const gamesData = snapshot.val();
                 // Konverter til array og sorter efter reviewCount (højeste først)
@@ -29,7 +29,7 @@ const PopularGames = ({ navigation }) => {
                     }))
                     .sort((a, b) => (b.reviewCount || 0) - (a.reviewCount || 0))
                     .slice(0, 10); // Tag de første 10 mest populære
-                
+
                 setPopularGames(gamesArray);
             }
         } catch (error) {
@@ -55,7 +55,7 @@ const PopularGames = ({ navigation }) => {
     return (
         <View style={popularGamesStyles.container}>
             <Text style={popularGamesStyles.title}>Popular Games</Text>
-            <ScrollView 
+            <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={popularGamesStyles.scrollContainer}
@@ -76,8 +76,8 @@ const PopularGames = ({ navigation }) => {
                             resizeMode="cover"
                         />
                         <View style={popularGamesStyles.gameInfo}>
-                            <Text 
-                                style={popularGamesStyles.gameName} 
+                            <Text
+                                style={popularGamesStyles.gameName}
                                 numberOfLines={2}
                             >
                                 {game.name}
