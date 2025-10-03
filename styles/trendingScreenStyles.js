@@ -3,6 +3,10 @@ import { StyleSheet, Dimensions } from 'react-native';
 const { width } = Dimensions.get('window');
 
 const styles = StyleSheet.create({
+  // Custom background that can be combined with global styles
+  customBackground: {
+    backgroundColor: '#0f0f0f', // Slightly darker than global
+  },
   container: {
     flex: 1,
     backgroundColor: '#1a1a1a',
