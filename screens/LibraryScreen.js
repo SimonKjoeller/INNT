@@ -1,11 +1,11 @@
 import React from 'react';
-import { View, Text } from 'react-native';
-import styles from '../styles/screenStyles';
+import { View } from 'react-native';
+import LibraryTabs from '../components/LibraryTabs';
 
-const LibraryScreen = () => {
+const LibraryScreen = ({ navigation }) => {
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Library Screen</Text>
+    <View style={{ flex: 1 }}>
+      <LibraryTabs navigation={navigation} userId="user1" />
     </View>
   );
 };

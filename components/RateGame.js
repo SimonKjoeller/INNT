@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, FlatList, Image, Alert, ActivityIndicator, ScrollView, Modal, TextInput } from 'react-native';
 import Slider from '@react-native-community/slider';
+
 import { ref, child, get, set, update, query, orderByChild, equalTo, push } from 'firebase/database';
+
+
 import Icon from 'react-native-vector-icons/Ionicons';
 import { db } from '../database/firebase';
 import styles from '../styles/screenStyles';
@@ -16,6 +19,10 @@ const formatDate = (dateString) => {
 
 const getGameInternalId = (gameData, gameIdStr) => {
     return gameData?.id || gameIdStr;
+};
+
+const formatRating = (rating) => {
+    return Math.round(rating * 10) / 10;
 };
 
 const createLoadingView = (message = "Loading...") => (
@@ -104,14 +111,29 @@ export const RateGameList = ({ navigation }) => {
 };
 
 // ===== RATING MODAL COMPONENT =====
-const RatingModal = ({ visible, onClose, gameData, onSubmitRating }) => {
-    const [rating, setRating] = useState(5.0);
-    const [comment, setComment] = useState('');
+const RatingModal = ({ visible, onClose, gameData, onSubmitRating, existingRating }) => {
+    const [rating, setRating] = useState(existingRating?.rating || 5.0);
+    const [comment, setComment] = useState(existingRating?.comment || '');
+
+    // Opdater state når existingRating ændres
+    useEffect(() => {
+        if (existingRating) {
+            setRating(existingRating.rating);
+            setComment(existingRating.comment || '');
+        } else {
+            setRating(5.0);
+            setComment('');
+        }
+    }, [existingRating]);
+
+    const handleRatingChange = (newRating) => {
+        setRating(newRating);
+        // Subtil haptic feedback ved rating ændring
+        Haptics.selectionAsync();
+    };
 
     const handleSubmit = () => {
         onSubmitRating(rating, comment);
-        setRating(5.0);
-        setComment('');
         onClose();
     };
 
@@ -136,9 +158,11 @@ const RatingModal = ({ visible, onClose, gameData, onSubmitRating }) => {
                     onPress={() => { }} // Prevent modal close when clicking inside
                     activeOpacity={1}
                 >
-                    <Text style={rateGameStyles.modalTitle}>Rate {gameData?.name}</Text>
+                    <Text style={rateGameStyles.modalTitle}>
+                        {existingRating ? `Update Rating for ${gameData?.name}` : `Rate ${gameData?.name}`}
+                    </Text>
 
-                    <Text style={rateGameStyles.ratingLabel}>Rating: {rating.toFixed(1)}/10</Text>
+                    <Text style={rateGameStyles.ratingLabel}>Rating: {formatRating(rating).toFixed(1)}/10</Text>
                     <View style={rateGameStyles.sliderContainer}>
                         <Text style={rateGameStyles.sliderLabel}>0</Text>
                         <Slider
@@ -146,7 +170,7 @@ const RatingModal = ({ visible, onClose, gameData, onSubmitRating }) => {
                             minimumValue={0}
                             maximumValue={10}
                             value={rating}
-                            onValueChange={setRating}
+                            onValueChange={handleRatingChange}
                             step={0.1}
                             minimumTrackTintColor="#FFD700"
                             maximumTrackTintColor="#666"
@@ -179,7 +203,9 @@ const RatingModal = ({ visible, onClose, gameData, onSubmitRating }) => {
                             style={rateGameStyles.modalButtonSubmit}
                             onPress={handleSubmit}
                         >
-                            <Text style={rateGameStyles.modalButtonTextSubmit}>Submit Rating</Text>
+                            <Text style={rateGameStyles.modalButtonTextSubmit}>
+                                {existingRating ? 'Update Rating' : 'Submit Rating'}
+                            </Text>
                         </TouchableOpacity>
                     </View>
                 </TouchableOpacity>
@@ -194,10 +220,15 @@ export const RateGameDetail = ({ gameId, navigation }) => {
     const [gameData, setGameData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [ratingModalVisible, setRatingModalVisible] = useState(false);
+    const [isOnWishlist, setIsOnWishlist] = useState(false);
+    const [wishlistKey, setWishlistKey] = useState(null);
+    const [existingRating, setExistingRating] = useState(null);
 
     useEffect(() => {
         if (gameIdStr) {
             fetchGameData();
+            checkWishlistStatus();
+            checkExistingRating();
         }
     }, [gameIdStr]);
 
@@ -222,6 +253,79 @@ export const RateGameDetail = ({ gameId, navigation }) => {
         }
     };
 
+    const checkWishlistStatus = async () => {
+        try {
+            const database = getDatabase(firebaseApp);
+            const wishlistRef = ref(database, 'userWishlist');
+            const wishlistQuery = query(wishlistRef, orderByChild('user_id'), equalTo('user1'));
+            const wishlistSnapshot = await get(wishlistQuery);
+
+            if (wishlistSnapshot.exists()) {
+                const wishlistData = wishlistSnapshot.val();
+                // gameIdStr er Firebase key, så vi henter game data først for at få internal ID
+                const gameRef = ref(database, `games/${gameIdStr}`);
+                const gameSnapshot = await get(gameRef);
+                const gameInternalId = gameSnapshot.exists() ? gameSnapshot.val().id : gameIdStr;
+
+                const existingEntry = Object.entries(wishlistData).find(
+                    ([key, wishlistItem]) => wishlistItem.game_id === gameInternalId
+                );
+
+                if (existingEntry) {
+                    setIsOnWishlist(true);
+                    setWishlistKey(existingEntry[0]);
+                } else {
+                    setIsOnWishlist(false);
+                    setWishlistKey(null);
+                }
+            } else {
+                setIsOnWishlist(false);
+                setWishlistKey(null);
+            }
+        } catch (error) {
+            console.error('Error checking wishlist status:', error);
+            setIsOnWishlist(false);
+            setWishlistKey(null);
+        }
+    };
+
+    const checkExistingRating = async () => {
+        try {
+            const database = getDatabase(firebaseApp);
+            const ratingsRef = ref(database, 'userRatings');
+            const ratingsQuery = query(ratingsRef, orderByChild('user_id'), equalTo('user1'));
+            const ratingsSnapshot = await get(ratingsQuery);
+
+            if (ratingsSnapshot.exists()) {
+                const ratingsData = ratingsSnapshot.val();
+                // gameIdStr er Firebase key, så vi henter game data først for at få internal ID
+                const gameRef = ref(database, `games/${gameIdStr}`);
+                const gameSnapshot = await get(gameRef);
+                const gameInternalId = gameSnapshot.exists() ? gameSnapshot.val().id : gameIdStr;
+
+                const existingEntry = Object.entries(ratingsData).find(
+                    ([key, ratingItem]) => ratingItem.game_id === gameInternalId
+                );
+
+                if (existingEntry) {
+                    const [ratingKey, ratingData] = existingEntry;
+                    setExistingRating({
+                        key: ratingKey,
+                        rating: ratingData.rating,
+                        comment: ratingData.comment || ''
+                    });
+                } else {
+                    setExistingRating(null);
+                }
+            } else {
+                setExistingRating(null);
+            }
+        } catch (error) {
+            console.error('Error checking existing rating:', error);
+            setExistingRating(null);
+        }
+    };
+
     const handleSubmitRating = async (rating, comment) => {
         try {
             const ratingsRef = ref(db, 'userRatings');
@@ -241,10 +345,12 @@ export const RateGameDetail = ({ gameId, navigation }) => {
                 }
             }
 
+            const roundedRating = formatRating(rating); // Rund til 1 decimal for at undgå floating point fejl
+
             const ratingData = {
                 game_id: gameInternalId,
                 user_id: 'user1',
-                rating: rating, // 0-10 med decimaler
+                rating: roundedRating,
                 comment: comment || null,
                 timestamp: new Date().toISOString(),
             };
@@ -254,34 +360,53 @@ export const RateGameDetail = ({ gameId, navigation }) => {
                 console.log('✅ Updated rating:', rating);
             } else {
                 await set(push(ratingsRef), ratingData);
-                console.log('✅ Created rating:', rating);
+                console.log('✅ Created rating:', roundedRating);
             }
 
-            Alert.alert('Success', `Rating saved: ${rating}/10`);
+            Alert.alert('Success', `Rating saved: ${roundedRating}/10`);
+            // Opdater eksisterende rating state
+            checkExistingRating();
         } catch (error) {
             console.error('Error saving rating:', error);
             Alert.alert('Error', 'Failed to save rating');
         }
     };
 
-    const handleAddToWishlist = async () => {
+    const handleToggleWishlist = async () => {
         try {
             const wishlistRef = ref(db, 'userWishlist');
             const gameInternalId = getGameInternalId(gameData, gameIdStr);
 
-            const wishlistData = {
-                game_id: gameInternalId,
-                user_id: 'user1',
-                game_name: gameData.name,
-                added_timestamp: new Date().toISOString(),
-            };
+            if (isOnWishlist && wishlistKey) {
+                // Fjern fra wishlist
+                const wishlistItemRef = ref(database, `userWishlist/${wishlistKey}`);
+                await set(wishlistItemRef, null);
 
-            await set(push(wishlistRef), wishlistData);
-            Alert.alert('Success', `${gameData.name} added to your wishlist!`);
-            console.log('✅ Added to wishlist:', gameData.name);
+                setIsOnWishlist(false);
+                setWishlistKey(null);
+                Alert.alert('Success', `${gameData.name} removed from your wishlist!`);
+                console.log('✅ Removed from wishlist:', gameData.name);
+            } else {
+                // Tilføj til wishlist
+                const wishlistRef = ref(database, 'userWishlist');
+                const wishlistData = {
+                    game_id: gameInternalId,
+                    user_id: 'user1',
+                    game_name: gameData.name,
+                    added_timestamp: new Date().toISOString(),
+                };
+
+                const newWishlistRef = push(wishlistRef);
+                await set(newWishlistRef, wishlistData);
+
+                setIsOnWishlist(true);
+                setWishlistKey(newWishlistRef.key);
+                Alert.alert('Success', `${gameData.name} added to your wishlist!`);
+                console.log('✅ Added to wishlist:', gameData.name);
+            }
         } catch (error) {
-            console.error('Error adding to wishlist:', error);
-            Alert.alert('Error', 'Failed to add to wishlist');
+            console.error('Error toggling wishlist:', error);
+            Alert.alert('Error', 'Failed to update wishlist');
         }
     };
 
@@ -327,15 +452,29 @@ export const RateGameDetail = ({ gameId, navigation }) => {
                     onPress={() => setRatingModalVisible(true)}
                 >
                     <Icon name="star" size={20} color="#FFD700" />
-                    <Text style={rateGameStyles.rateButtonText}>Rate Game</Text>
+                    <Text style={rateGameStyles.rateButtonText}>
+                        {existingRating ? 'Update Rating' : 'Rate Game'}
+                    </Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                    style={rateGameStyles.wishlistButton}
-                    onPress={handleAddToWishlist}
+                    style={[
+                        rateGameStyles.wishlistButton,
+                        isOnWishlist && rateGameStyles.wishlistButtonActive
+                    ]}
+                    onPress={handleToggleWishlist}
                 >
-                    <Icon name="bookmark" size={20} color="#4CAF50" />
-                    <Text style={rateGameStyles.wishlistButtonText}>Add to Wishlist</Text>
+                    <Icon
+                        name={isOnWishlist ? "bookmark" : "bookmark-outline"}
+                        size={20}
+                        color={isOnWishlist ? "#FF6B6B" : "#4CAF50"}
+                    />
+                    <Text style={[
+                        rateGameStyles.wishlistButtonText,
+                        isOnWishlist && rateGameStyles.wishlistButtonTextActive
+                    ]}>
+                        {isOnWishlist ? "Remove from Wishlist" : "Add to Wishlist"}
+                    </Text>
                 </TouchableOpacity>
             </View>
 
@@ -345,6 +484,7 @@ export const RateGameDetail = ({ gameId, navigation }) => {
                 onClose={() => setRatingModalVisible(false)}
                 gameData={gameData}
                 onSubmitRating={handleSubmitRating}
+                existingRating={existingRating}
             />
         </ScrollView>
     );
