@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, FlatList, Image, Alert, ActivityIndicator, ScrollView, Modal, TextInput } from 'react-native';
 import Slider from '@react-native-community/slider';
+import * as Haptics from 'expo-haptics';
 
 import { ref, child, get, set, update, query, orderByChild, equalTo, push } from 'firebase/database';
 
@@ -255,15 +256,14 @@ export const RateGameDetail = ({ gameId, navigation }) => {
 
     const checkWishlistStatus = async () => {
         try {
-            const database = getDatabase(firebaseApp);
-            const wishlistRef = ref(database, 'userWishlist');
+            const wishlistRef = ref(db, 'userWishlist');
             const wishlistQuery = query(wishlistRef, orderByChild('user_id'), equalTo('user1'));
             const wishlistSnapshot = await get(wishlistQuery);
 
             if (wishlistSnapshot.exists()) {
                 const wishlistData = wishlistSnapshot.val();
                 // gameIdStr er Firebase key, så vi henter game data først for at få internal ID
-                const gameRef = ref(database, `games/${gameIdStr}`);
+                const gameRef = ref(db, `games/${gameIdStr}`);
                 const gameSnapshot = await get(gameRef);
                 const gameInternalId = gameSnapshot.exists() ? gameSnapshot.val().id : gameIdStr;
 
@@ -291,15 +291,14 @@ export const RateGameDetail = ({ gameId, navigation }) => {
 
     const checkExistingRating = async () => {
         try {
-            const database = getDatabase(firebaseApp);
-            const ratingsRef = ref(database, 'userRatings');
+            const ratingsRef = ref(db, 'userRatings');
             const ratingsQuery = query(ratingsRef, orderByChild('user_id'), equalTo('user1'));
             const ratingsSnapshot = await get(ratingsQuery);
 
             if (ratingsSnapshot.exists()) {
                 const ratingsData = ratingsSnapshot.val();
                 // gameIdStr er Firebase key, så vi henter game data først for at få internal ID
-                const gameRef = ref(database, `games/${gameIdStr}`);
+                const gameRef = ref(db, `games/${gameIdStr}`);
                 const gameSnapshot = await get(gameRef);
                 const gameInternalId = gameSnapshot.exists() ? gameSnapshot.val().id : gameIdStr;
 
@@ -379,7 +378,7 @@ export const RateGameDetail = ({ gameId, navigation }) => {
 
             if (isOnWishlist && wishlistKey) {
                 // Fjern fra wishlist
-                const wishlistItemRef = ref(database, `userWishlist/${wishlistKey}`);
+                const wishlistItemRef = ref(db, `userWishlist/${wishlistKey}`);
                 await set(wishlistItemRef, null);
 
                 setIsOnWishlist(false);
@@ -388,7 +387,6 @@ export const RateGameDetail = ({ gameId, navigation }) => {
                 console.log('✅ Removed from wishlist:', gameData.name);
             } else {
                 // Tilføj til wishlist
-                const wishlistRef = ref(database, 'userWishlist');
                 const wishlistData = {
                     game_id: gameInternalId,
                     user_id: 'user1',
