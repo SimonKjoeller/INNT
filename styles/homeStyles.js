@@ -14,7 +14,7 @@ export const popularGamesStyles = StyleSheet.create({
     },
     headerTitle: {
         color: '#fff',
-        fontSize: 32,
+        fontSize: 14,
         fontWeight: 'bold',
     },
     headerSubtitle: {
@@ -23,14 +23,14 @@ export const popularGamesStyles = StyleSheet.create({
         marginTop: 5,
     },
     container: {
-        marginVertical: 20,
+        marginVertical: 8,
     },
     title: {
         color: '#fff',
-        fontSize: 22,
+        fontSize: 18,
         fontWeight: 'bold',
         marginLeft: 20,
-        marginBottom: 15,
+        marginBottom: 11,
     },
     loadingText: {
         color: '#aaa',
@@ -42,12 +42,12 @@ export const popularGamesStyles = StyleSheet.create({
         paddingVertical: 5,
     },
     gameCard: {
-        width: width * 0.3, // 30% af skærm bredde
-        marginRight: 10,
+        width: width * 0.264, // 10% larger than 24%
+        marginRight: 9,
     },
     gameImage: {
         width: '100%',
-        height: width * 0.45, // 1.5:1 ratio for covers
+        height: width * 0.396, // 10% larger than 0.36
         borderRadius: 8,
     },
     gameInfo: {
@@ -56,10 +56,10 @@ export const popularGamesStyles = StyleSheet.create({
     },
     gameName: {
         color: '#fff',
-        fontSize: 14,
+        fontSize: 13.2,
         fontWeight: '600',
-        marginBottom: 4,
-        lineHeight: 18,
+        marginBottom: 3.3,
+        lineHeight: 16.5,
     },
     reviewCount: {
         color: '#aaa',

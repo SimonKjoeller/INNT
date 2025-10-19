@@ -1,9 +1,14 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View } from 'react-native';
 import { RateGameDetail } from '../components/RateGame';
 
+
 const RateGameScreen = ({ route, navigation }) => {
-    const { gameId } = route.params || { gameId: '1' }; // Default til spil ID 1 hvis ingen param
+    const { gameId, fromScreen } = route.params || { gameId: '1', fromScreen: 'Home' };
+
+    useEffect(() => {
+        navigation.setOptions({ headerTitle: fromScreen === 'Search' ? 'Search' : 'Home' });
+    }, [fromScreen, navigation]);
 
     return (
         <View style={screenStyles.container}>

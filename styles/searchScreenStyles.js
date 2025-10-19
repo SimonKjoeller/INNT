@@ -1,6 +1,31 @@
 import { StyleSheet } from 'react-native';
 
 const styles = StyleSheet.create({
+  suggestionsContainer: {
+    position: 'absolute',
+    top: 60,
+    left: 16,
+    right: 16,
+    backgroundColor: '#232325',
+    borderRadius: 10,
+    zIndex: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 5,
+    paddingVertical: 4,
+  },
+  suggestionItem: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#333',
+  },
+  suggestionText: {
+    color: '#fff',
+    fontSize: 16,
+  },
   container: {
     flex: 1,
     backgroundColor: '#1a1a1a',
