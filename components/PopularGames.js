@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Image, Dimensions } from 'react-native';
-import { getDatabase, ref, get } from 'firebase/database';
-import { firebaseApp } from '../database/firebase';
+import { ref, get } from 'firebase/database';
+import { db } from '../database/firebase';
 import { popularGamesStyles } from '../styles/homeStyles';
 
 const PopularGames = ({ navigation }) => {
@@ -14,8 +14,7 @@ const PopularGames = ({ navigation }) => {
 
     const fetchPopularGames = async () => {
         try {
-            const database = getDatabase(firebaseApp);
-            const gamesRef = ref(database, 'games');
+            const gamesRef = ref(db, 'games');
             const snapshot = await get(gamesRef);
 
             if (snapshot.exists()) {
