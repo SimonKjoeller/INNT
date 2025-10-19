@@ -187,6 +187,13 @@ export const rateGameStyles = StyleSheet.create({
         fontWeight: 'bold',
         marginLeft: 8,
     },
+    wishlistButtonActive: {
+        borderColor: '#FF6B6B',
+        backgroundColor: '#2a1f1f',
+    },
+    wishlistButtonTextActive: {
+        color: '#FF6B6B',
+    },
     // Rating Modal Styles
     modalOverlay: {
         flex: 1,
