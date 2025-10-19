@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, ActivityIndicator } from 'react-native';
-import { getDatabase, ref, get, query, orderByChild, equalTo } from 'firebase/database';
+import { ref, get, query, orderByChild, equalTo } from 'firebase/database';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { firebaseApp } from '../database/firebase';
+import { db } from '../database/firebase';
 import { libraryStyles } from '../styles/libraryStyles';
 import GameListItem from './GameListItem';
 
@@ -17,10 +17,9 @@ const RatedGamesList = ({ navigation, userId = "user1" }) => { // Default user f
     const fetchRatedGames = async () => {
         try {
             setLoading(true);
-            const database = getDatabase(firebaseApp);
 
             // Hent ratings for brugeren
-            const ratingsRef = ref(database, 'userRatings');
+            const ratingsRef = ref(db, 'userRatings');
             console.log('ratingsRef', ratingsRef);
             const ratingsQuery = query(ratingsRef, orderByChild('user_id'), equalTo(userId));
             const ratingsSnapshot = await get(ratingsQuery);
@@ -33,7 +32,7 @@ const RatedGamesList = ({ navigation, userId = "user1" }) => { // Default user f
                 }));
 
                 // Hent game detaljer for hvert rated spil
-                const gamesRef = ref(database, 'games');
+                const gamesRef = ref(db, 'games');
                 const gamesSnapshot = await get(gamesRef);
 
                 if (gamesSnapshot.exists()) {
