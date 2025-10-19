@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, FlatList, Image, Alert, ActivityIndicator, ScrollView, Modal, TextInput } from 'react-native';
 import Slider from '@react-native-community/slider';
-import { getDatabase, ref, child, get, set, update, query, orderByChild, equalTo, push } from 'firebase/database';
-import * as Haptics from 'expo-haptics';
+
+import { ref, child, get, set, update, query, orderByChild, equalTo, push } from 'firebase/database';
+
+
 import Icon from 'react-native-vector-icons/Ionicons';
-import { firebaseApp } from '../database/firebase';
+import { db } from '../database/firebase';
 import styles from '../styles/screenStyles';
 import { rateGameComponentStyles, rateGameStyles } from '../styles/RateGameStyles';
 
@@ -40,8 +42,7 @@ export const RateGameList = ({ navigation }) => {
 
     const fetchGames = async () => {
         try {
-            const database = getDatabase(firebaseApp);
-            const gamesRef = ref(database, 'games');
+            const gamesRef = ref(db, 'games');
             const snapshot = await get(gamesRef);
 
             if (snapshot.exists()) {
@@ -233,8 +234,7 @@ export const RateGameDetail = ({ gameId, navigation }) => {
 
     const fetchGameData = async () => {
         try {
-            const database = getDatabase(firebaseApp);
-            const gameRef = ref(database, `games/${gameIdStr}`);
+            const gameRef = ref(db, `games/${gameIdStr}`);
             const gameSnapshot = await get(gameRef);
 
             if (!gameSnapshot.exists()) {
@@ -328,8 +328,7 @@ export const RateGameDetail = ({ gameId, navigation }) => {
 
     const handleSubmitRating = async (rating, comment) => {
         try {
-            const database = getDatabase(firebaseApp);
-            const ratingsRef = ref(database, 'userRatings');
+            const ratingsRef = ref(db, 'userRatings');
             const gameInternalId = getGameInternalId(gameData, gameIdStr);
 
             // Tjek for eksisterende rating
@@ -357,8 +356,8 @@ export const RateGameDetail = ({ gameId, navigation }) => {
             };
 
             if (existingRatingKey) {
-                await set(ref(database, `userRatings/${existingRatingKey}`), ratingData);
-                console.log('✅ Updated rating:', roundedRating);
+                await set(ref(db, `userRatings/${existingRatingKey}`), ratingData);
+                console.log('✅ Updated rating:', rating);
             } else {
                 await set(push(ratingsRef), ratingData);
                 console.log('✅ Created rating:', roundedRating);
@@ -375,7 +374,7 @@ export const RateGameDetail = ({ gameId, navigation }) => {
 
     const handleToggleWishlist = async () => {
         try {
-            const database = getDatabase(firebaseApp);
+            const wishlistRef = ref(db, 'userWishlist');
             const gameInternalId = getGameInternalId(gameData, gameIdStr);
 
             if (isOnWishlist && wishlistKey) {

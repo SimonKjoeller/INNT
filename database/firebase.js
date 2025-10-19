@@ -1,6 +1,8 @@
 // database/firebase.js
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getDatabase } from "firebase/database";
+import { initializeAuth, getReactNativePersistence } from 'firebase/auth';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Firebase config from environment variables
 const firebaseConfig = {
@@ -13,8 +15,20 @@ const firebaseConfig = {
     appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID,
 };
 
+
+
+
+
 // Init kun én gang
 export const firebaseApp = getApps().length ? getApp() : initializeApp(firebaseConfig);
 
-// Realtime Database (bruges automatisk korrekt region fra config)
-export const rtdb = getDatabase(firebaseApp);
+// Initialize Auth with React Native persistence
+export const auth = initializeAuth(firebaseApp, {
+  persistence: getReactNativePersistence(AsyncStorage),
+});
+
+// Single shared Realtime Database instance
+export const db = getDatabase(firebaseApp);
+
+// Optional: also export firebaseApp if others need it
+export { firebaseApp as app };
