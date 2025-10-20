@@ -184,8 +184,13 @@ export const styles = StyleSheet.create({
     color: '#ffffff',
   },
   logoutButton: {
-    marginTop: 8,
-    backgroundColor: '#dd3b3b',
+    width: '90%',
+    alignSelf: 'center',
+    marginTop: 24,
+    backgroundColor: '#8b0000',
+    borderRadius: 10,
+    paddingVertical: 14,
+    alignItems: 'center',
   },
 
 
@@ -199,5 +204,14 @@ export const styles = StyleSheet.create({
   // Indhold styling inde i scroll view
   profileScrollContent: {
     padding: 24
+  },
+
+  // Profile screen container and spacer
+  profileContainer: {
+    flex: 1,
+    backgroundColor: '#181A20',
+  },
+  footerSpacer: {
+    height: 40,
   }
 });
