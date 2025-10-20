@@ -1,73 +1,111 @@
-//work in progress
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
-  FlatList,
+  ScrollView,
   Image,
   TouchableOpacity,
 } from 'react-native';
 import styles from '../styles/trendingScreenStyles';
 import globalStyles from '../styles/globalStyles';
+import { ref, get, query, orderByChild, limitToLast } from 'firebase/database';
+import { db } from '../database/firebase';
 
 const TrendingPage = () => {
-  //sample data
-  const trendingGames = [
-    { id: 1, title: 'Cyberpunk 2077', image: require('../assets/Cyberpunk_2077_box_art.jpg') },
-    { id: 2, title: 'The Witcher 3', image: require('../assets/Witcher_3_cover_art.jpg') },
-    { id: 3, title: 'Red Dead 2', image: require('../assets/Red_Dead.jpg') },
-    { id: 4, title: 'GTA V', image: require('../assets/GTAV.jpg') },
-    { id: 5, title: 'Minecraft', image: require('../assets/Minecraft.jpg') },
-    { id: 6, title: 'Fortnite', image: require('../assets/Fortnite.jpg') },
-    { id: 7, title: 'Call of Duty', image: require('../assets/COD_Black_Ops_4.jpg') },
-    { id: 8, title: 'FIFA 25', image: require('../assets/FC25.jpg') },
-    { id: 9, title: 'Valorant', image: require('../assets/Valorant.jpg') },
-    { id: 10, title: 'League of Legends', image: require('../assets/League_Of_Legends.jpg') },
-    { id: 11, title: 'Overwatch 2', image: require('../assets/Overwatch.jpg') },
-    { id: 12, title: 'Apex Legends', image: require('../assets/Apex_Legends.jpg') },
-    { id: 13, title: 'God of War', image: require('../assets/God_of_War_4.jpg') },
-    { id: 14, title: 'Spider-Man', image: require('../assets/Spider-Man_PS4.jpg') },
-    { id: 15, title: 'Hogwarts Legacy', image: require('../assets/Hogwarts_legacy.jpg') },
-    { id: 16, title: 'Starfield', image: require('../assets/Starfield.jpg') },
-    { id: 17, title: 'Baldurs Gate 3', image: require('../assets/Baldurs_Gate_3.jpg') },
-    { id: 18, title: 'Diablo 4', image: require('../assets/D4.jpg') },
-    { id: 19, title: 'Street Fighter 6', image: require('../assets/Street_Fighter_6.jpg') },
-    { id: 20, title: 'Mortal Kombat 1', image: require('../assets/Mortal_Kombat_1_key_ar.jpeg') },
-    { id: 21, title: 'Elden Ring', image: require('../assets/Elden_Ring.jpg') },
-    { id: 22, title: 'Halo Infinite', image: require('../assets/Halo_Infinite.jpg') },
-    { id: 23, title: 'Assassins Creed', image: require('../assets/AC_Shadows.jpg') },
-    { id: 24, title: 'Destiny 2', image: require('../assets/Destiny_2.jpg') },
-    { id: 25, title: 'Rocket League', image: require('../assets/Rocket_League.jpg') },
-    { id: 26, title: 'Fall Guys', image: require('../assets/Fall_Guys.jpg') },
-    { id: 27, title: 'Among Us', image: require('../assets/Among_Us.jpg') },
-    { id: 28, title: 'Roblox', image: require('../assets/roblox.jpg') },
-    { id: 29, title: 'Genshin Impact', image: require('../assets/Genshin_impact.jpg') },
-    { id: 30, title: 'Final Fantasy VII', image: require('../assets/FFVIIRemake.jpg') },
-    { id: 31, title: 'Hollow Knight', image: require('../assets/Hollow_Knight.jpg') },
-    { id: 32, title: 'Hollow Knight Silksong', image: require('../assets/Silksong.jpg') },
-  ];
+  // Henter top 32 spil sorteret på reviewCount fra Firebase Realtime Database.
+  const [trendingGames, setTrendingGames] = useState([]);
 
-  const renderGameCard = ({ item }) => {
+  useEffect(() => {
+    fetchTrendingGames();
+  }, []);
+
+  // Henter de 32 mest anmeldte spil (top efter reviewCount) fra 'games'
+  const fetchTrendingGames = async () => {
+    try {
+      const gamesRef = ref(db, 'games');
+      const topQuery = query(gamesRef, orderByChild('reviewCount'), limitToLast(32)); // hent 32 mest populære
+
+      const snapshot = await get(topQuery);
+
+      if (snapshot.exists()) {
+        const gamesArray = [];
+        snapshot.forEach((childSnapshot) => {
+          const gameData = childSnapshot.val();
+          gamesArray.push({
+            firebaseKey: childSnapshot.key,
+            id: gameData?.id || childSnapshot.key,
+            ...gameData
+          });
+        });
+
+        // Firebase returnerer stigende rækkefølge -> vend for mest populære først
+        gamesArray.reverse();
+
+        // Normaliser billedkilde så både lokale require() og eksterne URLs virker
+        const normalized = gamesArray.map(g => {
+          // Hvis der findes coverUrl brug det, ellers bevar eksisterende image-field
+          const imageCandidate = g.coverUrl || g.image || null;
+          return { ...g, image: imageCandidate };
+        });
+
+        setTrendingGames(normalized);
+      } else {
+        // Ingen data fundet -> sæt tom liste
+        setTrendingGames([]);
+      }
+    } catch (error) {
+      console.error('Fejl ved hentning af trending spil:', error);
+      setTrendingGames([]);
+    }
+  };
+
+  const renderGameCard = (game) => {
+    // Vælg korrekt Image source: lokal require() eller fjern-URL
+    let imageSource = null;
+    if (typeof game.image === 'number') {
+      imageSource = game.image; // lokal asset
+    } else if (typeof game.image === 'string' && game.image.length > 0) {
+      imageSource = { uri: game.image };
+    } else if (typeof game.coverUrl === 'string' && game.coverUrl.length > 0) {
+      imageSource = { uri: game.coverUrl };
+    }
+
     return (
-      <TouchableOpacity style={styles.gameCard}>
-        <Image source={item.image} style={styles.gameImage} />
+      <TouchableOpacity key={game.id} style={styles.gameCard}>
+        {imageSource ? (
+          <Image source={imageSource} style={styles.gameImage} />
+        ) : (
+          // Hvis ingen billede-kilde -> vis tom boks (bevarer layout)
+          <View style={[styles.gameImage, { backgroundColor: '#cccccc' }]} />
+        )}
         <View style={styles.gameInfo}>
+          {/* Intet ændret i layoutet — ingen tekstfelt i dette design */}
         </View>
       </TouchableOpacity>
     );
   };
 
+  const renderRow = (games, rowIndex) => (
+    <View key={rowIndex} style={styles.row}>
+      {games.map(game => renderGameCard(game))}
+    </View>
+  );
+
+  // Grupperer spil i rækker af 4 (samme opførsel som før)
+  const gameRows = [];
+  for (let i = 0; i < trendingGames.length; i += 4) {
+    gameRows.push(trendingGames.slice(i, i + 4));
+  }
+
   return (
-    <View style={styles.container}>
-      <FlatList
-        data={trendingGames}
-        renderItem={renderGameCard}
-        numColumns={4}
-        keyExtractor={(item) => item.id.toString()}
+    <View style={[globalStyles.container, styles.customBackground]}>
+      <ScrollView 
+        style={[globalStyles.scrollView, styles.scrollView]}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
-        columnWrapperStyle={styles.row}
-      />
+        contentContainerStyle={[globalStyles.scrollContent, styles.scrollContent]}
+      >
+        {gameRows.map((row, index) => renderRow(row, index))}
+      </ScrollView>
     </View>
   );
 };

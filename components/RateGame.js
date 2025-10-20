@@ -157,7 +157,7 @@ const RatingModal = ({ visible, onClose, gameData, onSubmitRating, existingRatin
             >
                 <TouchableOpacity
                     style={rateGameStyles.modalContainer}
-                    onPress={() => { }} // Prevent modal close when clicking inside
+                    onPress={() => { }} 
                     activeOpacity={1}
                 >
                     <Text style={rateGameStyles.modalTitle}>
@@ -508,5 +508,5 @@ export const RateGameDetail = ({ gameId, navigation }) => {
     );
 };
 
-// Default export for backward compatibility (list component)
+
 export default RateGameList;

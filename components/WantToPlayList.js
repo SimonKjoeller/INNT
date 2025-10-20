@@ -39,42 +39,52 @@ const WantToPlayList = ({ navigation, userId }) => {
                     wishlistKey: key
                 }));
 
-                // Hent game detaljer for hvert spil i wishlisten
+                // Hent kun de spil som findes i wishlisten (undgår at hente hele 'games' tabellen)
                 const gamesRef = ref(database, 'games');
-                const gamesSnapshot = await get(gamesRef);
+                const uniqueIds = [...new Set(wishlistArray.map(w => w.game_id))];
 
-                if (gamesSnapshot.exists()) {
-                    const gamesData = gamesSnapshot.val();
+                // Parallelle forespørgsler pr. unik game_id
+                const gameFetchPromises = uniqueIds.map(id =>
+                    get(query(gamesRef, orderByChild('id'), equalTo(id)))
+                );
 
-                    // Match wishlist items med game data ved internal ID
-                    const enrichedWishlist = wishlistArray.map(wishlistItem => {
-                        // Find det rigtige spil ved at søge efter internal ID
-                        const gameEntry = Object.entries(gamesData).find(
-                            ([firebaseKey, gameData]) => gameData.id === wishlistItem.game_id
-                        );
+                const gameSnapshots = await Promise.all(gameFetchPromises);
 
-                        if (!gameEntry) {
-                            console.warn(`Game not found for ID: ${wishlistItem.game_id}`);
-                            return null;
-                        }
+                // Byg map fra internal id -> { firebaseKey, data }
+                const gamesById = {};
+                gameSnapshots.forEach(snap => {
+                    if (snap.exists()) {
+                        snap.forEach(child => {
+                            const gd = child.val();
+                            if (gd && gd.id != null) {
+                                gamesById[gd.id] = { firebaseKey: child.key, data: gd };
+                            }
+                        });
+                    }
+                });
 
-                        const [firebaseKey, gameData] = gameEntry;
+                // Merge spil-data først, så wishlist-itemets egne felter (fx. tilføjelses-timestamp) bevares
+                const enrichedWishlist = wishlistArray.map(wishlistItem => {
+                    const match = gamesById[wishlistItem.game_id];
+                    if (!match) {
+                        console.warn(`Game not found for ID: ${wishlistItem.game_id}`);
+                        return null;
+                    }
+                    const { firebaseKey, data: gameData } = match;
+                    return {
+                        ...gameData,        // spillets data først
+                        ...wishlistItem,    // wishlist-item overskriver ved konflikt
+                        firebaseKey,        // Firebase key for navigation
+                        gameId: wishlistItem.game_id,
+                    };
+                }).filter(item => item !== null);
 
-                        return {
-                            ...wishlistItem,
-                            ...gameData,
-                            firebaseKey: firebaseKey, // Correct Firebase key for navigation
-                            gameId: wishlistItem.game_id, // Internal game ID
-                        };
-                    }).filter(item => item !== null); // Filtrer null entries
+                // Sorter efter added_timestamp (nyeste først)
+                enrichedWishlist.sort((a, b) =>
+                    new Date(b.added_timestamp) - new Date(a.added_timestamp)
+                );
 
-                    // Sorter efter added_timestamp (nyeste først)
-                    enrichedWishlist.sort((a, b) =>
-                        new Date(b.added_timestamp) - new Date(a.added_timestamp)
-                    );
-
-                    setWishlistGames(enrichedWishlist);
-                }
+                setWishlistGames(enrichedWishlist);
             } else {
                 setWishlistGames([]);
             }

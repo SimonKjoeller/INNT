@@ -38,42 +38,53 @@ const RatedGamesList = ({ navigation, userId }) => {
                     ratingKey: key
                 }));
 
-                // Hent game detaljer for hvert rated spil
+                // Hent kun nødvendige spil for brugerens ratings (undgår at hente hele 'games' tabellen)
                 const gamesRef = ref(db, 'games');
-                const gamesSnapshot = await get(gamesRef);
+                const uniqueIds = [...new Set(ratingsArray.map(r => r.game_id))];
 
-                if (gamesSnapshot.exists()) {
-                    const gamesData = gamesSnapshot.val();
+                // Lav parallelle forespørgsler for hver unik game_id
+                const gameFetchPromises = uniqueIds.map(id =>
+                    get(query(gamesRef, orderByChild('id'), equalTo(id)))
+                );
 
-                    // Match rating items med game data ved internal ID
-                    const enrichedRatings = ratingsArray.map(ratingItem => {
-                        // Find det rigtige spil ved at søge efter internal ID
-                        const gameEntry = Object.entries(gamesData).find(
-                            ([firebaseKey, gameData]) => gameData.id === ratingItem.game_id
-                        );
+                const gameSnapshots = await Promise.all(gameFetchPromises);
 
-                        if (!gameEntry) {
-                            console.warn(`Game not found for ID: ${ratingItem.game_id}`);
-                            return null;
-                        }
+                // Byg en map fra internal id -> { firebaseKey, data }
+                const gamesById = {};
+                gameSnapshots.forEach(snap => {
+                    if (snap.exists()) {
+                        snap.forEach(child => {
+                            const gd = child.val();
+                            if (gd && gd.id != null) {
+                                gamesById[gd.id] = { firebaseKey: child.key, data: gd };
+                            }
+                        });
+                    }
+                });
 
-                        const [firebaseKey, gameData] = gameEntry;
+                // Match rating items med fundne game-data
+                // Merge game-data først, så brugerens rating/felter (ratingItem) overskriver ved behov
+                const enrichedRatings = ratingsArray.map(ratingItem => {
+                    const match = gamesById[ratingItem.game_id];
+                    if (!match) {
+                        console.warn(`Game not found for ID: ${ratingItem.game_id}`);
+                        return null;
+                    }
+                    const { firebaseKey, data: gameData } = match;
+                    return {
+                        ...gameData,         // spillets data først
+                        ...ratingItem,       // brugerens rating overskriver ved konflikt
+                        firebaseKey,
+                        gameId: ratingItem.game_id,
+                    };
+                }).filter(item => item !== null);
 
-                        return {
-                            ...ratingItem,
-                            ...gameData,
-                            firebaseKey: firebaseKey, // Correct Firebase key for navigation
-                            gameId: ratingItem.game_id, // Internal game ID
-                        };
-                    }).filter(item => item !== null); // Filtrer null entries
+                // Sorter efter timestamp (nyeste først)
+                enrichedRatings.sort((a, b) =>
+                    new Date(b.timestamp) - new Date(a.timestamp)
+                );
 
-                    // Sorter efter timestamp (nyeste først)
-                    enrichedRatings.sort((a, b) =>
-                        new Date(b.timestamp) - new Date(a.timestamp)
-                    );
-
-                    setRatedGames(enrichedRatings);
-                }
+                setRatedGames(enrichedRatings);
             } else {
                 setRatedGames([]);
             }
