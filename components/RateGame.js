@@ -10,6 +10,7 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import { db } from '../database/firebase';
 import styles from '../styles/screenStyles';
 import { rateGameComponentStyles, rateGameStyles } from '../styles/RateGameStyles';
+import { useAuth } from './Auth';
 
 
 const formatDate = (dateString) => {
@@ -224,6 +225,8 @@ export const RateGameDetail = ({ gameId, navigation }) => {
     const [isOnWishlist, setIsOnWishlist] = useState(false);
     const [wishlistKey, setWishlistKey] = useState(null);
     const [existingRating, setExistingRating] = useState(null);
+    const { user } = useAuth();
+    const currentUserId = user?.uid || null;
 
     useEffect(() => {
         if (gameIdStr) {
@@ -231,7 +234,7 @@ export const RateGameDetail = ({ gameId, navigation }) => {
             checkWishlistStatus();
             checkExistingRating();
         }
-    }, [gameIdStr]);
+    }, [gameIdStr, currentUserId]);
 
     const fetchGameData = async () => {
         try {
@@ -256,8 +259,13 @@ export const RateGameDetail = ({ gameId, navigation }) => {
 
     const checkWishlistStatus = async () => {
         try {
+            if (!currentUserId) {
+                setIsOnWishlist(false);
+                setWishlistKey(null);
+                return;
+            }
             const wishlistRef = ref(db, 'userWishlist');
-            const wishlistQuery = query(wishlistRef, orderByChild('user_id'), equalTo('user1'));
+            const wishlistQuery = query(wishlistRef, orderByChild('user_id'), equalTo(currentUserId));
             const wishlistSnapshot = await get(wishlistQuery);
 
             if (wishlistSnapshot.exists()) {
@@ -291,8 +299,12 @@ export const RateGameDetail = ({ gameId, navigation }) => {
 
     const checkExistingRating = async () => {
         try {
+            if (!currentUserId) {
+                setExistingRating(null);
+                return;
+            }
             const ratingsRef = ref(db, 'userRatings');
-            const ratingsQuery = query(ratingsRef, orderByChild('user_id'), equalTo('user1'));
+            const ratingsQuery = query(ratingsRef, orderByChild('user_id'), equalTo(currentUserId));
             const ratingsSnapshot = await get(ratingsQuery);
 
             if (ratingsSnapshot.exists()) {
@@ -327,6 +339,10 @@ export const RateGameDetail = ({ gameId, navigation }) => {
 
     const handleSubmitRating = async (rating, comment) => {
         try {
+            if (!currentUserId) {
+                Alert.alert('Login required', 'You need to be logged in to rate games.');
+                return;
+            }
             const ratingsRef = ref(db, 'userRatings');
             const gameInternalId = getGameInternalId(gameData, gameIdStr);
 
@@ -337,7 +353,7 @@ export const RateGameDetail = ({ gameId, navigation }) => {
             if (existingSnapshot.exists()) {
                 const ratings = existingSnapshot.val();
                 const existingEntry = Object.entries(ratings).find(
-                    ([key, ratingObj]) => ratingObj.game_id === gameInternalId && ratingObj.user_id === 'user1'
+                    ([key, ratingObj]) => ratingObj.game_id === gameInternalId && ratingObj.user_id === currentUserId
                 );
                 if (existingEntry) {
                     existingRatingKey = existingEntry[0];
@@ -348,7 +364,7 @@ export const RateGameDetail = ({ gameId, navigation }) => {
 
             const ratingData = {
                 game_id: gameInternalId,
-                user_id: 'user1',
+                user_id: currentUserId,
                 rating: roundedRating,
                 comment: comment || null,
                 timestamp: new Date().toISOString(),
@@ -373,6 +389,10 @@ export const RateGameDetail = ({ gameId, navigation }) => {
 
     const handleToggleWishlist = async () => {
         try {
+            if (!currentUserId) {
+                Alert.alert('Login required', 'You need to be logged in to manage your wishlist.');
+                return;
+            }
             const wishlistRef = ref(db, 'userWishlist');
             const gameInternalId = getGameInternalId(gameData, gameIdStr);
 
@@ -389,7 +409,7 @@ export const RateGameDetail = ({ gameId, navigation }) => {
                 // Tilføj til wishlist
                 const wishlistData = {
                     game_id: gameInternalId,
-                    user_id: 'user1',
+                    user_id: currentUserId,
                     game_name: gameData.name,
                     added_timestamp: new Date().toISOString(),
                 };
