@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Image } from 'react-native';
-import { ref, get } from 'firebase/database';
+import { ref, get, query, orderByChild, limitToLast } from 'firebase/database';
 import { db } from '../database/firebase';
 import { popularGamesStyles } from '../styles/homeStyles';
 
@@ -15,27 +15,36 @@ const TrendingGames = ({ navigation }) => {
     const fetchTrendingGames = async () => {
         try {
             const gamesRef = ref(db, 'games');
-            const snapshot = await get(gamesRef);
+
+           
+            const topGamesQuery = query(
+                gamesRef,
+                orderByChild('reviewCount'),
+                limitToLast(100)
+            );
+
+            const snapshot = await get(topGamesQuery);
 
             if (snapshot.exists()) {
-                const gamesData = snapshot.val();
-                //top 100 by reviewCount
-                const top100 = Object.keys(gamesData)
-                    .map(key => {
-                        const gameData = gamesData[key];
-                        return {
-                            firebaseKey: key,
-                            id: gameData?.id || key,
-                            ...gameData
-                        };
-                    })
-                    .sort((a, b) => (b.reviewCount || 0) - (a.reviewCount || 0))
-                    .slice(0, 100);
-                // tager de 10 nyeste blandt de 100 mest anmeldte spil
-                const newest10 = top100
+                const gamesArray = [];
+
+                snapshot.forEach((childSnapshot) => {
+                    const gameData = childSnapshot.val();
+                    gamesArray.push({
+                        firebaseKey: childSnapshot.key,
+                        id: gameData?.id || childSnapshot.key,
+                        ...gameData
+                    });
+                });
+
+                gamesArray.reverse();
+
+
+                const newest10 = gamesArray
                     .filter(game => game.first_release_date)
                     .sort((a, b) => new Date(b.first_release_date) - new Date(a.first_release_date))
                     .slice(0, 10);
+
                 setTrendingGames(newest10);
             }
         } catch (error) {

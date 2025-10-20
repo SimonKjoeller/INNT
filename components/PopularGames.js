@@ -1,59 +1,79 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image, Dimensions } from 'react-native';
-import { ref, get } from 'firebase/database';
-import { db } from '../database/firebase';
+import { View, Text, ScrollView, TouchableOpacity, Image } from 'react-native';
+import { ref, get, query, orderByChild, limitToLast } from 'firebase/database'; 
+import { db } from '../database/firebase'; // Import af Firebase-databasen
 import { popularGamesStyles } from '../styles/homeStyles';
 
 const PopularGames = ({ navigation }) => {
-    const [popularGames, setPopularGames] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const [popularGames, setPopularGames] = useState([]); // State til at gemme populære spil
+    const [loading, setLoading] = useState(true); // State til at vise "Loading..." mens data hentes
 
+    // useEffect kaldes kun én gang når komponenten indlæses
     useEffect(() => {
         fetchPopularGames();
     }, []);
 
+    // Funktion der henter populære spil fra Firebase
     const fetchPopularGames = async () => {
         try {
-            const gamesRef = ref(db, 'games');
-            const snapshot = await get(gamesRef);
+            const gamesRef = ref(db, 'games'); // Reference til "games" i databasen
+
+            // 1. Opret forespørgsel: sortér efter 'reviewCount' og hent de sidste 10 (de mest populære)
+            const topGamesQuery = query(
+                gamesRef,
+                orderByChild('reviewCount'), // Sortér efter egenskaben 'reviewCount'
+                limitToLast(10)              // Hent de 10 spil med flest anmeldelser
+            );
+
+            // 2. Udfør forespørgslen
+            const snapshot = await get(topGamesQuery); // Hent data baseret på forespørgslen
 
             if (snapshot.exists()) {
-                const gamesData = snapshot.val();
-                // Konverter til array og sorter efter reviewCount (højeste først)
-                const gamesArray = Object.keys(gamesData)
-                    .map(key => {
-                        const gameData = gamesData[key];
-                        return {
-                            firebaseKey: key, // Firebase key (72)
-                            id: gameData?.id || key, // Use internal ID if exists, otherwise firebase key
-                            ...gameData
-                        };
-                    })
-                    .sort((a, b) => (b.reviewCount || 0) - (a.reviewCount || 0))
-                    .slice(0, 10); // Tag de første 10 mest populære
+                const gamesArray = [];
 
+                // Firebase returnerer data i stigende rækkefølge, så de mest populære er sidst i listen.
+                // Vi vender derfor rækkefølgen senere.
+                snapshot.forEach((childSnapshot) => {
+                    const gameData = childSnapshot.val();
+                    gamesArray.push({
+                        firebaseKey: childSnapshot.key, 
+                        id: gameData?.id || childSnapshot.key, 
+                        ...gameData // Tilføj alle andre egenskaber for spillet
+                    });
+                });
+
+                // Vend rækkefølgen så de mest populære spil vises først
+                gamesArray.reverse();
+
+                // Opdater state med de hentede spil
                 setPopularGames(gamesArray);
+            } else {
+                console.log("Ingen populære spil fundet.");
             }
         } catch (error) {
-            console.error('Error fetching popular games:', error);
+            console.error('Fejl ved hentning af populære spil:', error);
         } finally {
+            // Uanset hvad sætter vi loading til false, så UI opdateres
             setLoading(false);
         }
     };
 
+    // Når brugeren trykker på et spil, navigeres der til 'RateGame'-skærmen
     const handleGamePress = (game) => {
         navigation.navigate('RateGame', { gameId: game.firebaseKey, fromScreen: 'Home' });
     };
 
+    // Hvis data stadig indlæses
     if (loading) {
         return (
             <View style={popularGamesStyles.container}>
                 <Text style={popularGamesStyles.title}>Popular Games</Text>
-                <Text style={popularGamesStyles.loadingText}>Loading...</Text>
+                <Text style={popularGamesStyles.loadingText}>Indlæser...</Text>
             </View>
         );
     }
 
+    // Når data er hentet, vises spilkortene i en horisontal scroll
     return (
         <View style={popularGamesStyles.container}>
             <Text style={popularGamesStyles.title}>Popular Games</Text>
@@ -64,23 +84,23 @@ const PopularGames = ({ navigation }) => {
             >
                 {popularGames.map((game, index) => (
                     <TouchableOpacity
-                        key={game.id}
+                        key={game.id} // Unik nøgle for hvert spil
                         style={[
                             popularGamesStyles.gameCard,
                             { marginLeft: index === 0 ? 20 : 10 },
                             { marginRight: index === popularGames.length - 1 ? 20 : 0 }
                         ]}
-                        onPress={() => handleGamePress(game)}
+                        onPress={() => handleGamePress(game)} // Navigér når der trykkes
                     >
                         <Image
-                            source={{ uri: game.coverUrl }}
+                            source={{ uri: game.coverUrl }} // Spillets cover-billede
                             style={popularGamesStyles.gameImage}
                             resizeMode="cover"
                         />
                         <View style={popularGamesStyles.gameInfo}>
                             <Text
                                 style={popularGamesStyles.gameName}
-                                numberOfLines={2}
+                                numberOfLines={2} // Vis maks 2 linjer af spilnavnet
                             >
                                 {game.name}
                             </Text>

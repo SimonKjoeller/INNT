@@ -3,8 +3,10 @@ import { View, Text, TouchableOpacity, Image } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { libraryStyles } from '../styles/libraryStyles';
 
+// Konverter og rund rating til 1 decimal — sørg for tal-typen
 const formatRating = (rating) => {
-    return Math.round(rating * 10) / 10;
+    const num = Number(rating) || 0;
+    return Math.round(num * 10) / 10;
 };
 
 const GameListItem = ({
@@ -26,8 +28,9 @@ const GameListItem = ({
     };
 
     const renderStars = (rating) => {
-        // Konverter fra 0-10 skala til 0-5 skala for visuelle stjerner
-        const normalizedRating = Math.round((rating / 10) * 5);
+        // Sørg for tal og konverter fra 0-10 skala til 0-5 skala for visuelle stjerner
+        const num = Number(rating) || 0;
+        const normalizedRating = Math.round((num / 10) * 5);
         const stars = [];
         for (let i = 1; i <= 5; i++) {
             stars.push(
