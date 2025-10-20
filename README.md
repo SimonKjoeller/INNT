@@ -29,7 +29,7 @@ INNT/
 └── app.json                  # Expo konfiguration
 ```
 ## Demo Videoer
-Christian:
+Christian: https://www.youtube.com/watch?v=oI433wm1TsU
 
 Benjamin:
 
