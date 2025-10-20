@@ -31,7 +31,7 @@ INNT/
 ## Demo Videoer
 Christian: https://www.youtube.com/watch?v=oI433wm1TsU
 
-Benjamin:
+Benjamin: https://youtube.com/shorts/Wj7qE4Tcbd4?si=u--c9FGymn7zxMRc
 
 Nicholas:
 
@@ -53,7 +53,6 @@ Home screen
 - Upcoming Games
 - Personalized For You
 - search screen
-Link til video: https://youtube.com/shorts/Wj7qE4Tcbd4?si=u--c9FGymn7zxMRc
 ´´´´
 
 ## Nicholas
