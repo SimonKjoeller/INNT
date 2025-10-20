@@ -1,11 +1,14 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { libraryStyles } from '../styles/libraryStyles';
 import WantToPlayList from './WantToPlayList';
 import RatedGamesList from './RatedGamesList';
+import { useAuth } from './Auth';
 
-const LibraryTabs = ({ navigation, userId = "user1" }) => {
+const LibraryTabs = ({ navigation, userId }) => {
     const [activeTab, setActiveTab] = useState('wishlist');
+    const { user } = useAuth();
+    const effectiveUserId = useMemo(() => userId || user?.uid || null, [userId, user]);
 
     const tabs = [
         {
@@ -53,7 +56,7 @@ const LibraryTabs = ({ navigation, userId = "user1" }) => {
         return (
             <ActiveComponent
                 navigation={navigation}
-                userId={userId}
+                userId={effectiveUserId}
             />
         );
     };

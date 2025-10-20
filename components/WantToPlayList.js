@@ -1,27 +1,35 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { View, Text, FlatList, ActivityIndicator } from 'react-native';
 import { getDatabase, ref, get, query, orderByChild, equalTo } from 'firebase/database';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { firebaseApp } from '../database/firebase';
 import { libraryStyles } from '../styles/libraryStyles';
 import GameListItem from './GameListItem';
+import { useAuth } from './Auth';
 
-const WantToPlayList = ({ navigation, userId = "user1" }) => { // Default user for now
+const WantToPlayList = ({ navigation, userId }) => {
     const [wishlistGames, setWishlistGames] = useState([]);
     const [loading, setLoading] = useState(true);
+    const { user } = useAuth();
+    const effectiveUserId = useMemo(() => userId || user?.uid || null, [userId, user]);
 
     useEffect(() => {
         fetchWishlist();
-    }, [userId]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [effectiveUserId]);
 
     const fetchWishlist = async () => {
         try {
             setLoading(true);
             const database = getDatabase(firebaseApp);
+            if (!effectiveUserId) {
+                setWishlistGames([]);
+                return;
+            }
 
             // Hent wishlist for brugeren
             const wishlistRef = ref(database, 'userWishlist');
-            const wishlistQuery = query(wishlistRef, orderByChild('user_id'), equalTo(userId));
+            const wishlistQuery = query(wishlistRef, orderByChild('user_id'), equalTo(effectiveUserId));
             const wishlistSnapshot = await get(wishlistQuery);
 
             if (wishlistSnapshot.exists()) {
