@@ -28,6 +28,16 @@ INNT/
 ├── babel.config.js           # Babel konfiguration
 └── app.json                  # Expo konfiguration
 ```
+## Demo Videoer
+Christian:
+
+Benjamin:
+
+Nicholas:
+
+Simon: 
+
+
 
 
 ## Ansvarsområder
@@ -54,7 +64,7 @@ Library
 - Rated games
 ´´´´
 
-## Kjøller
+## Simon
 ´´´´
 Game siden
 - Se information om spil
