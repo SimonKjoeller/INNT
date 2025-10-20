@@ -52,6 +52,8 @@ Home screen
 - Trending Games
 - Upcoming Games
 - Personalized For You
+- search screen
+https://youtube.com/shorts/Wj7qE4Tcbd4?si=u--c9FGymn7zxMRc
 ´´´´
 
 ## Nicholas
