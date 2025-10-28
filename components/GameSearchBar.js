@@ -1,45 +1,80 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, TextInput, TouchableOpacity, Text } from 'react-native';
-import { ref, get } from 'firebase/database';
+import { ref, get, query, orderByChild, startAt, endAt, limitToFirst } from 'firebase/database';
 import { db } from '../database/firebase';
 import styles from '../styles/searchScreenStyles';
 
 const GameSearchBar = ({ navigation }) => {
   const [searchText, setSearchText] = useState('');
-  const [allGames, setAllGames] = useState([]);
   const [suggestions, setSuggestions] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const debounceRef = useRef(null);
+
+  // NOTE: For denne prefix-forespørgsel skal hvert spil have et felt 'name_lower' (lowercased name)
+  // og Realtime DB rules skal indeholde ".indexOn": ["name_lower"] under /games.
+  // Alternativt kan du tilføje name_lower ved import/oprettelse af spil.
 
   useEffect(() => {
-    fetchGames();
-  }, []);
+    // Debounce for at reducere antal queries ved hurtig indtastning
+    if (debounceRef.current) clearTimeout(debounceRef.current);
 
-  useEffect(() => {
     if (searchText.trim().length === 0) {
       setSuggestions([]);
+      setLoading(false);
       return;
     }
-    const filtered = allGames.filter(game =>
-      game.name.toLowerCase().includes(searchText.toLowerCase())
-    ).slice(0, 5);
-    setSuggestions(filtered);
-  }, [searchText, allGames]);
 
-  const fetchGames = async () => {
+    debounceRef.current = setTimeout(() => {
+      fetchSuggestions(searchText.trim().toLowerCase());
+    }, 250);
+
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [searchText]);
+
+  // Prefix-søgning: orderByChild('name_lower') + startAt/endAt + limitToFirst
+  const fetchSuggestions = async (lowerPrefix) => {
     try {
+      setLoading(true);
       const gamesRef = ref(db, 'games');
-      const snapshot = await get(gamesRef);
+
+      // Debug: log hvad vi søger efter
+      console.log('[GameSearchBar] fetchSuggestions - prefix:', lowerPrefix);
+
+      // Søger efter alle name_lower der starter med prefix (venligst sørg for name_lower findes i DB)
+      const q = query(
+        gamesRef,
+        orderByChild('name_lower'),
+        startAt(lowerPrefix),
+        endAt(lowerPrefix + '\uf8ff'),
+        limitToFirst(5)
+      );
+
+      const snapshot = await get(q);
+      // Debug: log om snapshot eksisterer og antal children
+      let childCount = 0;
       if (snapshot.exists()) {
-        const gamesData = snapshot.val();
-        const gamesArray = Object.keys(gamesData).map(key => ({
-          firebaseKey: key,
-          id: gamesData[key]?.id || key,
-          name: gamesData[key]?.name || '',
-        }));
-        setAllGames(gamesArray);
+        snapshot.forEach(() => { childCount += 1; });
       }
+      console.log('[GameSearchBar] fetchSuggestions - snapshot.exists():', snapshot.exists(), 'children:', childCount);
+
+      const results = [];
+      if (snapshot.exists()) {
+        snapshot.forEach(child => {
+          const gd = child.val();
+          results.push({
+            firebaseKey: child.key,
+            id: gd?.id || child.key,
+            name: gd?.name || ''
+          });
+        });
+      }
+
+      setSuggestions(results);
     } catch (error) {
-      console.error('Error fetching games:', error);
+      console.error('Error fetching suggestions:', error);
+      setSuggestions([]);
     } finally {
       setLoading(false);
     }
@@ -60,11 +95,11 @@ const GameSearchBar = ({ navigation }) => {
         value={searchText}
         onChangeText={setSearchText}
         returnKeyType="search"
-        editable={!loading}
+        editable={true}
       />
       {/* Loading indicator */}
       {loading && (
-        <Text style={{ color: '#aaa', marginTop: 8, marginLeft: 4 }}>Fetching games...</Text>
+        <Text style={{ color: '#aaa', marginTop: 8, marginLeft: 4 }}>Searching...</Text>
       )}
       {/* Suggestions dropdown */}
       {!loading && searchText.length > 0 && suggestions.length > 0 && (
