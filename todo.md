@@ -10,7 +10,7 @@
 
 # App baseret
 ````
-- Fetch upcoming games # Jæger []
+- Fetch upcoming games # Jæger [x] - 28-10-2025
 - Caching - Loading # Jæger []
 - Ratings skal maks være 0,5-separeret # Simon []
 - Baggrundsbillede formatering (720) # Simon []
