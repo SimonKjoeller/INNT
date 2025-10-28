@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, FlatList, Image, Alert, ActivityIndicator
 import Slider from '@react-native-community/slider';
 import * as Haptics from 'expo-haptics';
 
-import { ref, child, get, set, update, query, orderByChild, equalTo, push } from 'firebase/database';
+import { ref, child, get, set, update, query, orderByChild, equalTo, push, limitToLast } from 'firebase/database';
 
 
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -42,20 +42,36 @@ export const RateGameList = ({ navigation }) => {
         fetchGames();
     }, []);
 
+    // Hent kun et begrænset sæt af spil (fx top 50 efter reviewCount) for at undgå at downloade hele databasen på mount.
     const fetchGames = async () => {
         try {
             const gamesRef = ref(db, 'games');
-            const snapshot = await get(gamesRef);
+            // Hent de 50 spil med flest anmeldelser (Firebase returnerer stigende rækkefølge -> brug limitToLast)
+            const topQuery = query(gamesRef, orderByChild('reviewCount'), limitToLast(50));
+
+            const snapshot = await get(topQuery);
 
             if (snapshot.exists()) {
-                const gamesData = snapshot.val();
-                const gamesArray = Object.keys(gamesData).map(key => ({
-                    id: key,
-                    ...gamesData[key]
-                }));
+                const gamesArray = [];
+                snapshot.forEach(childSnapshot => {
+                    const gameData = childSnapshot.val();
+                    gamesArray.push({
+                        // Gem firebase-nøglen som id for navigation/unik identifikation
+                        id: childSnapshot.key,
+                        firebaseKey: childSnapshot.key,
+                        ...gameData
+                    });
+                });
+
+                // Vend rækkefølgen så de mest anmeldte vises først
+                gamesArray.reverse();
+
                 setGames(gamesArray);
             } else {
-                Alert.alert('Info', 'No games found in database');
+                // Intet at vise — vis besked eller tom liste
+                setGames([]);
+                // Behold Alert hvis du vil informere brugeren:
+                // Alert.alert('Info', 'No games found in database');
             }
         } catch (error) {
             console.error('Error fetching games:', error);
