@@ -66,6 +66,21 @@ export const rateGameStyles = StyleSheet.create({
         height: '100%',
         opacity: 0.8,
     },
+    headerBackdrop: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        opacity: 0.35,
+    },
+    headerGradient: {
+        position: 'absolute',
+        left: 0,
+        right: 0,
+        top: 0,
+        bottom: 0,
+    },
     backButton: {
         position: 'absolute',
         top: 50,
@@ -107,10 +122,23 @@ export const rateGameStyles = StyleSheet.create({
         fontSize: 16,
         marginBottom: SPACING.md,
     },
+    gameCompany: {
+        color: COLORS.textSecondary,
+        fontSize: 14,
+        marginBottom: SPACING.md,
+    },
+    madeByLabel: {
+        color: COLORS.textTertiary,
+        fontSize: 12,
+        marginTop: 2,
+    },
     gameCover: {
         width: 120,
         height: 180,
         borderRadius: SPACING.sm,
+        marginTop: -70,
+        borderWidth: 1,
+        borderColor: '#333',
     },
     trailerButton: {
         flexDirection: 'row',
@@ -142,6 +170,33 @@ export const rateGameStyles = StyleSheet.create({
         lineHeight: 18,
         marginTop: SPACING.md,
         flex: 1,
+    },
+    fullSummaryContainer: {
+        paddingHorizontal: SPACING.lg,
+        marginTop: SPACING.sm,
+        marginBottom: SPACING.lg,
+    },
+    collapsedSummaryContainer: {
+        position: 'relative',
+        paddingHorizontal: SPACING.lg,
+        marginTop: SPACING.sm,
+        marginBottom: SPACING.lg,
+        overflow: 'hidden',
+    },
+    summaryFull: {
+        color: COLORS.textContent,
+        fontSize: 14,
+        lineHeight: 20,
+    },
+    summaryFade: {
+        position: 'absolute',
+        left: 0,
+        right: 0,
+        bottom: 0,
+        height: 24,
+        // Simple fade hint without extra deps: solid overlay with high opacity near bottom
+        // Gives a subtle indication there is more content
+        backgroundColor: 'rgba(26,26,26,0.9)',
     },
     // Action Buttons Section  
     actionButtonsContainer: {

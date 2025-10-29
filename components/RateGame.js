@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, FlatList, Image, Alert, ActivityIndicator, ScrollView, Modal, TextInput } from 'react-native';
+import { View, Text, TouchableOpacity, FlatList, Image, Alert, ActivityIndicator, ScrollView, Modal, TextInput, Dimensions } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import Slider from '@react-native-community/slider';
 import * as Haptics from 'expo-haptics';
 
@@ -24,7 +25,8 @@ const getGameInternalId = (gameData, gameIdStr) => {
 };
 
 const formatRating = (rating) => {
-    return Math.round(rating * 10) / 10;
+    // Round to nearest 0.5
+    return Math.round(rating * 2) / 2;
 };
 
 const createLoadingView = (message = "Loading...") => (
@@ -82,6 +84,7 @@ export const RateGameList = ({ navigation }) => {
     };
 
     const handleGameSelect = (gameId) => {
+        console.log('[NAVIGATE] RateGame -> gameId:', gameId);
         navigation.navigate('RateGame', { gameId });
     };
 
@@ -173,7 +176,7 @@ const RatingModal = ({ visible, onClose, gameData, onSubmitRating, existingRatin
             >
                 <TouchableOpacity
                     style={rateGameStyles.modalContainer}
-                    onPress={() => { }} 
+                    onPress={() => { }}
                     activeOpacity={1}
                 >
                     <Text style={rateGameStyles.modalTitle}>
@@ -189,7 +192,7 @@ const RatingModal = ({ visible, onClose, gameData, onSubmitRating, existingRatin
                             maximumValue={10}
                             value={rating}
                             onValueChange={handleRatingChange}
-                            step={0.1}
+                            step={0.5}
                             minimumTrackTintColor="#FFD700"
                             maximumTrackTintColor="#666"
                             thumbStyle={rateGameStyles.sliderThumb}
@@ -241,8 +244,56 @@ export const RateGameDetail = ({ gameId, navigation }) => {
     const [isOnWishlist, setIsOnWishlist] = useState(false);
     const [wishlistKey, setWishlistKey] = useState(null);
     const [existingRating, setExistingRating] = useState(null);
+    const [isSummaryExpanded, setIsSummaryExpanded] = useState(false);
+    const [artworkRatios, setArtworkRatios] = useState({}); // uri -> (height/width)
     const { user } = useAuth();
     const currentUserId = user?.uid || null;
+
+    const screenWidth = Dimensions.get('window').width;
+
+    const getPrimaryCompany = (data) => {
+        if (!data) return null;
+        const ensureString = (val) => {
+            if (!val) return null;
+            if (typeof val === 'string') return val;
+            if (typeof val === 'object') return val.name || null;
+            return null;
+        };
+        const candidates = [
+            ensureString(data.developer),
+            Array.isArray(data.developers) ? ensureString(data.developers[0]) : null,
+            ensureString(data.publisher),
+            Array.isArray(data.publishers) ? ensureString(data.publishers[0]) : null,
+        ].filter(Boolean);
+        return candidates[0] || null;
+    };
+
+    const getHeaderHeightFromArtwork = (url) => {
+        if (!url) return null;
+        try {
+            const matchToken = url.match(/t_([^/]+)/);
+            const token = matchToken ? matchToken[1] : null;
+            if (!token) return null;
+            // Handle common tokens like 720p/1080p → 16:9
+            const pMatch = token.match(/^(\d{3,4})p$/);
+            if (pMatch) {
+                const aspect = 9 / 16; // standard 16:9
+                return screenWidth * aspect;
+            }
+            // Handle WxH explicit sizes, e.g., 1280x720
+            const whMatch = token.match(/^(\d{2,4})x(\d{2,4})$/);
+            if (whMatch) {
+                const w = parseInt(whMatch[1], 10);
+                const h = parseInt(whMatch[2], 10);
+                if (w > 0 && h > 0) {
+                    return screenWidth * (h / w);
+                }
+            }
+            return null;
+        } catch (e) {
+            return null;
+        }
+    };
 
     useEffect(() => {
         if (gameIdStr) {
@@ -254,6 +305,7 @@ export const RateGameDetail = ({ gameId, navigation }) => {
 
     const fetchGameData = async () => {
         try {
+            console.log('[FETCH] Game data for id:', gameIdStr);
             const gameRef = ref(db, `games/${gameIdStr}`);
             const gameSnapshot = await get(gameRef);
 
@@ -264,6 +316,7 @@ export const RateGameDetail = ({ gameId, navigation }) => {
             }
 
             const gameData = gameSnapshot.val();
+            console.log('[FETCHED] Game id:', gameData?.id || gameIdStr);
             setGameData(gameData);
         } catch (error) {
             console.error('Error fetching game data:', error);
@@ -376,7 +429,7 @@ export const RateGameDetail = ({ gameId, navigation }) => {
                 }
             }
 
-            const roundedRating = formatRating(rating); // Rund til 1 decimal for at undgå floating point fejl
+            const roundedRating = formatRating(rating); // Round to nearest 0.5
 
             const ratingData = {
                 game_id: gameInternalId,
@@ -444,18 +497,90 @@ export const RateGameDetail = ({ gameId, navigation }) => {
         }
     };
 
+    const artworkUrls = Array.isArray(gameData?.artworkUrls) && (gameData?.artworkUrls?.length > 0)
+        ? gameData.artworkUrls
+        : (gameData?.coverUrl ? [gameData.coverUrl] : []);
+    const firstArtworkUri = artworkUrls[0];
+
+    // Calculate measured ratios once artwork urls are known
+    useEffect(() => {
+        if (!firstArtworkUri) return;
+        [firstArtworkUri].forEach((uri) => {
+            if (!uri || artworkRatios[uri]) return;
+            Image.getSize(uri,
+                (w, h) => {
+                    if (w > 0 && h > 0) {
+                        setArtworkRatios((prev) => ({ ...prev, [uri]: h / w }));
+                    }
+                },
+                (err) => {
+                    // Ignore; fallback logic will handle
+                    console.log('[IMAGE] getSize failed for', uri, err?.message || err);
+                }
+            );
+        });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [firstArtworkUri]);
+
+    const clamp = (val, min, max) => Math.max(min, Math.min(max, val));
+    const getHeightForArtwork = (uri) => {
+        const measuredRatio = uri ? artworkRatios[uri] : null;
+        const fallbackRatio = (() => {
+            const h = getHeaderHeightFromArtwork(uri);
+            return h ? h / screenWidth : null; // convert height back to ratio if available
+        })();
+        const ratio = measuredRatio || fallbackRatio || 9 / 16; // default 16:9
+        // If the image is an ultra-wide banner (<0.2), use a lower min height
+        const minRatio = ratio < 0.2 ? 0.22 : 0.45;
+        const clampedRatio = clamp(ratio, minRatio, 0.75);
+        const h = screenWidth * clampedRatio;
+        return h;
+    };
+
+    const headerHeight = getHeightForArtwork(firstArtworkUri) || rateGameStyles.headerContainer.height;
+    useEffect(() => {
+        const uri = firstArtworkUri;
+        if (!uri) return;
+        const measured = artworkRatios[uri];
+        const height = getHeightForArtwork(uri);
+        if (measured) {
+            console.log('[ARTWORK] single image', { uri, measuredRatio: measured, chosenHeight: height, screenWidth });
+        }
+    }, [firstArtworkUri, artworkRatios, screenWidth]);
+
+    const handleArtworkMomentumEnd = () => { };
+
     if (loading) return createLoadingView();
     if (!gameData) return createLoadingView("Game not found");
 
     return (
         <ScrollView style={rateGameStyles.container}>
             {/* Header Image */}
-            <View style={rateGameStyles.headerContainer}>
-                <Image
-                    source={{ uri: gameData.artworkUrls?.[0] || gameData.coverUrl }}
-                    style={rateGameStyles.headerImage}
-                    resizeMode="cover"
-                />
+            <View style={[rateGameStyles.headerContainer, { height: headerHeight }]}>
+                {(() => {
+                    const uri = firstArtworkUri;
+                    const ratio = artworkRatios[uri];
+                    const isBanner = typeof ratio === 'number' && ratio < 0.2;
+                    return (
+                        <View style={{ width: screenWidth, height: '100%' }}>
+                            <Image
+                                source={{ uri }}
+                                style={rateGameStyles.headerBackdrop}
+                                resizeMode="cover"
+                                blurRadius={isBanner ? 20 : 0}
+                            />
+                            <Image
+                                source={{ uri }}
+                                style={rateGameStyles.headerImage}
+                                resizeMode={isBanner ? 'contain' : 'cover'}
+                            />
+                            <LinearGradient
+                                colors={["rgba(0,0,0,0.15)", "rgba(0,0,0,0.65)"]}
+                                style={rateGameStyles.headerGradient}
+                            />
+                        </View>
+                    );
+                })()}
             </View>
 
             {/* Content */}
@@ -465,11 +590,14 @@ export const RateGameDetail = ({ gameId, navigation }) => {
                     <Text style={rateGameStyles.gameYear}>
                         {formatDate(gameData.first_release_date)}
                     </Text>
-
-                    {/* Summary starter her ved siden af game info */}
-                    <Text style={rateGameStyles.summaryInline}>
-                        {gameData.summary || 'No summary available.'}
-                    </Text>
+                    {getPrimaryCompany(gameData) && (
+                        <>
+                            <Text style={rateGameStyles.madeByLabel}>Made by:</Text>
+                            <Text style={rateGameStyles.gameCompany}>
+                                {getPrimaryCompany(gameData)}
+                            </Text>
+                        </>
+                    )}
                 </View>
 
                 <Image
@@ -478,6 +606,41 @@ export const RateGameDetail = ({ gameId, navigation }) => {
                     resizeMode="cover"
                 />
             </View>
+
+            {/* Summary (collapsed) under image, full width */}
+            {!isSummaryExpanded && (
+                <TouchableOpacity
+                    onPress={() => setIsSummaryExpanded(true)}
+                    activeOpacity={0.9}
+                    accessibilityRole="button"
+                    accessibilityLabel="Expand game description"
+                    style={rateGameStyles.collapsedSummaryContainer}
+                >
+                    <Text
+                        style={rateGameStyles.summaryFull}
+                        numberOfLines={4}
+                        ellipsizeMode="tail"
+                    >
+                        {gameData.summary || 'No summary available.'}
+                    </Text>
+                    <View pointerEvents="none" style={rateGameStyles.summaryFade} />
+                </TouchableOpacity>
+            )}
+
+            {/* Summary full-width (expanded) — fylder resten af skærmen under billedet */}
+            {isSummaryExpanded && (
+                <TouchableOpacity
+                    onPress={() => setIsSummaryExpanded(false)}
+                    activeOpacity={0.8}
+                    accessibilityRole="button"
+                    accessibilityLabel="Collapse game description"
+                    style={rateGameStyles.fullSummaryContainer}
+                >
+                    <Text style={rateGameStyles.summaryFull}>
+                        {gameData.summary || 'No summary available.'}
+                    </Text>
+                </TouchableOpacity>
+            )}
 
             {/* Action Buttons */}
             <View style={rateGameStyles.actionButtonsContainer}>
