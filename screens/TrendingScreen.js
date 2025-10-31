@@ -10,6 +10,8 @@ import styles from '../styles/trendingScreenStyles';
 import globalStyles from '../styles/globalStyles';
 import { ref, get, query, orderByChild, limitToLast } from 'firebase/database';
 import { db } from '../database/firebase';
+import sessionCache from '../caching/sessionCache'; // session in-memory cache
+import listCache from '../caching/listCache';       // track list-sourced cached keys
 
 const TrendingPage = () => {
   // Henter top 32 spil sorteret på reviewCount fra Firebase Realtime Database.
@@ -47,6 +49,23 @@ const TrendingPage = () => {
           const imageCandidate = g.coverUrl || g.image || null;
           return { ...g, image: imageCandidate };
         });
+
+        // Cache kun de normaliserede items vi viser i Trending (kun ved cache-miss)
+        try {
+          for (const entry of normalized) {
+            const key = entry.firebaseKey;
+            const already = sessionCache.get(key);
+            if (!already) {
+              const cachedEntry = { ...entry, __cachedFromSource: 'trending' };
+              sessionCache.set(key, cachedEntry);
+              console.log(`[TrendingPage] cached game ${key}`);
+              const ev = listCache.add(key);
+              if (ev) console.log(`[TrendingPage] listCache evicted: ${ev}`);
+            }
+          }
+        } catch (e) {
+          console.log('[TrendingPage] cache loop error', e?.message || e);
+        }
 
         setTrendingGames(normalized);
       } else {

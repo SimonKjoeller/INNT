@@ -11,6 +11,8 @@ import styles from '../styles/trendingScreenStyles';
 import globalStyles from '../styles/globalStyles';
 import { ref, get, query, orderByChild, limitToLast } from 'firebase/database';
 import { db } from '../database/firebase';
+import sessionCache from '../caching/sessionCache'; // Session-cache til at genbruge spil-data ved klik
+import listCache from '../caching/listCache';
 
 const UpcomingScreen = () => {
   // Henter top 32 spil baseret på reviewCount til "Upcoming" visningen (kun data, layout uændret)
@@ -39,14 +41,31 @@ const UpcomingScreen = () => {
           });
         });
 
-        // Firebase returnerer stigende rækkefølge -> vend for mest populære først
+        // Vend rækkefølgen så de mest populære kommer først
         gamesArray.reverse();
 
-        // Normaliser billedfelt så eksisterende layout kan bruge game.image (lokal require eller URL)
+        // Normaliser billedfelt
         const normalized = gamesArray.map(g => {
           const imageCandidate = g.coverUrl || g.image || null;
           return { ...g, image: imageCandidate };
         });
+
+        // Cache kun de normaliserede items vi viser i Upcoming (og log ved ny cache)
+        try {
+          for (const entry of normalized) {
+            const key = entry.firebaseKey;
+            const already = sessionCache.get(key);
+            if (!already) {
+              const cachedEntry = { ...entry, __cachedFromSource: 'upcoming' };
+              sessionCache.set(key, cachedEntry);
+              console.log(`[UpcomingScreen] cached game ${key}`);
+              const ev = listCache.add(key);
+              if (ev) console.log(`[UpcomingScreen] listCache evicted: ${ev}`);
+            }
+          }
+        } catch (e) {
+          console.log('[UpcomingScreen] cache loop error', e?.message || e);
+        }
 
         setUpcomingGames(normalized);
       } else {

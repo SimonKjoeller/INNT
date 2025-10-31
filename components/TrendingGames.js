@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Image } from 'react-native';
 import { ref, get, query, orderByChild, limitToLast } from 'firebase/database';
+import sessionCache from '../caching/sessionCache';
+import listCache from '../caching/listCache';
 import { db } from '../database/firebase';
 import { popularGamesStyles } from '../styles/homeStyles';
 
@@ -16,7 +18,6 @@ const TrendingGames = ({ navigation }) => {
         try {
             const gamesRef = ref(db, 'games');
 
-           
             const topGamesQuery = query(
                 gamesRef,
                 orderByChild('reviewCount'),
@@ -28,22 +29,42 @@ const TrendingGames = ({ navigation }) => {
             if (snapshot.exists()) {
                 const gamesArray = [];
 
+                // Saml resultater (ingen caching her)
                 snapshot.forEach((childSnapshot) => {
                     const gameData = childSnapshot.val();
-                    gamesArray.push({
+                    const entry = {
                         firebaseKey: childSnapshot.key,
                         id: gameData?.id || childSnapshot.key,
                         ...gameData
-                    });
+                    };
+                    gamesArray.push(entry);
                 });
 
+                // Mest populære først
                 gamesArray.reverse();
 
-
+                // Fra disse top 100: vælg de 10 nyeste baseret på first_release_date
                 const newest10 = gamesArray
                     .filter(game => game.first_release_date)
                     .sort((a, b) => new Date(b.first_release_date) - new Date(a.first_release_date))
                     .slice(0, 10);
+
+                // Cache kun de 10 items vi faktisk viser
+                try {
+                    for (const entry of newest10) {
+                        const key = entry.firebaseKey;
+                        const already = sessionCache.get(key);
+                        if (!already) {
+                            const cachedEntry = { ...entry, __cachedFromSource: 'trending' };
+                            sessionCache.set(key, cachedEntry);
+                            console.log(`[TrendingGames] cached game ${key}`);
+                            const evicted = listCache.add(key);
+                            if (evicted) console.log(`[TrendingGames] listCache evicted: ${evicted}`);
+                        }
+                    }
+                } catch (e) {
+                    console.log('[TrendingGames] cache loop error', e?.message || e);
+                }
 
                 setTrendingGames(newest10);
             }

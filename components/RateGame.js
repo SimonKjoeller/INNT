@@ -5,6 +5,7 @@ import Slider from '@react-native-community/slider';
 import * as Haptics from 'expo-haptics';
 
 import { ref, child, get, set, update, query, orderByChild, equalTo, push, limitToLast } from 'firebase/database';
+import sessionCache from '../caching/sessionCache';
 
 
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -303,9 +304,21 @@ export const RateGameDetail = ({ gameId, navigation }) => {
         }
     }, [gameIdStr, currentUserId]);
 
+    // Hent spil-data — brug session-cache ved tilgængelighed for at undgå gentagne DB-opslag
     const fetchGameData = async () => {
         try {
-            console.log('[FETCH] Game data for id:', gameIdStr);
+            // Tjek session-cachen først
+            const cached = sessionCache.get(gameIdStr);
+            if (cached) {
+                const src = cached.__cachedFromSource || 'unknown';
+                console.log(`[RateGame] cache hit for ${gameIdStr} (source: ${src})`);
+                setGameData(cached);
+                setLoading(false);
+                return;
+            }
+
+            // Cache miss -> hent fra database
+            console.log(`[RateGame] cache miss for ${gameIdStr} — fetching from DB`);
             const gameRef = ref(db, `games/${gameIdStr}`);
             const gameSnapshot = await get(gameRef);
 
@@ -318,6 +331,9 @@ export const RateGameDetail = ({ gameId, navigation }) => {
             const gameData = gameSnapshot.val();
             console.log('[FETCHED] Game id:', gameData?.id || gameIdStr);
             setGameData(gameData);
+            // Gem i session-cache for efterfølgende klik i samme session
+            // (DB-fetched entries keep whatever source flag they may have)
+            sessionCache.set(gameIdStr, gameData);
         } catch (error) {
             console.error('Error fetching game data:', error);
             Alert.alert('Error', 'Failed to load game data');
@@ -326,6 +342,7 @@ export const RateGameDetail = ({ gameId, navigation }) => {
         }
     };
 
+    // Tjek wishlist-status — genbrug session-cache for at undgå ekstra spil-opslag ved cache-hit
     const checkWishlistStatus = async () => {
         try {
             if (!currentUserId) {
@@ -339,10 +356,18 @@ export const RateGameDetail = ({ gameId, navigation }) => {
 
             if (wishlistSnapshot.exists()) {
                 const wishlistData = wishlistSnapshot.val();
-                // gameIdStr er Firebase key, så vi henter game data først for at få internal ID
-                const gameRef = ref(db, `games/${gameIdStr}`);
-                const gameSnapshot = await get(gameRef);
-                const gameInternalId = gameSnapshot.exists() ? gameSnapshot.val().id : gameIdStr;
+                // Forsøg at få internal ID fra cache først for at undgå ekstra DB-opslag
+                const cached = sessionCache.get(gameIdStr);
+                let gameInternalId = gameIdStr;
+                if (cached && cached.id) {
+                    gameInternalId = cached.id;
+                } else {
+                    // Fald tilbage til at hente spil-data fra DB (sjældent, kun på cache-miss)
+                    const gameRef = ref(db, `games/${gameIdStr}`);
+                    const gameSnapshot = await get(gameRef);
+                    gameInternalId = gameSnapshot.exists() ? gameSnapshot.val().id : gameIdStr;
+                    if (gameSnapshot.exists()) sessionCache.set(gameIdStr, gameSnapshot.val());
+                }
 
                 const existingEntry = Object.entries(wishlistData).find(
                     ([key, wishlistItem]) => wishlistItem.game_id === gameInternalId
@@ -366,6 +391,7 @@ export const RateGameDetail = ({ gameId, navigation }) => {
         }
     };
 
+    // Tjek om brugeren allerede har givet en rating — genbrug cache for internal ID hvis muligt
     const checkExistingRating = async () => {
         try {
             if (!currentUserId) {
@@ -378,10 +404,17 @@ export const RateGameDetail = ({ gameId, navigation }) => {
 
             if (ratingsSnapshot.exists()) {
                 const ratingsData = ratingsSnapshot.val();
-                // gameIdStr er Firebase key, så vi henter game data først for at få internal ID
-                const gameRef = ref(db, `games/${gameIdStr}`);
-                const gameSnapshot = await get(gameRef);
-                const gameInternalId = gameSnapshot.exists() ? gameSnapshot.val().id : gameIdStr;
+                // Forsøg at få internal ID fra cache først
+                const cached = sessionCache.get(gameIdStr);
+                let gameInternalId = gameIdStr;
+                if (cached && cached.id) {
+                    gameInternalId = cached.id;
+                } else {
+                    const gameRef = ref(db, `games/${gameIdStr}`);
+                    const gameSnapshot = await get(gameRef);
+                    gameInternalId = gameSnapshot.exists() ? gameSnapshot.val().id : gameIdStr;
+                    if (gameSnapshot.exists()) sessionCache.set(gameIdStr, gameSnapshot.val());
+                }
 
                 const existingEntry = Object.entries(ratingsData).find(
                     ([key, ratingItem]) => ratingItem.game_id === gameInternalId
