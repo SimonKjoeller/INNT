@@ -23,12 +23,13 @@
     - Evt. New recommended []
     - Upcoming games []
 - Sortering på genre / kategori # Babski []
-- Evt. tilføj 'Played', hvor man ikke nødvendigvis skal rate. # Simon []
+- Evt. tilføj 'Played', hvor man ikke nødvendigvis skal rate. # Simon [x] 01-11-2025
 - Fix logging, så vi kan se hvilke spil der bliver klikket ind på (server) # Simon [x] 29-10-2025
 - "See more" - ift. game kategorier (Home Page) # Babski []
 - Evt. 'Personalized for you' ift. game recommendation # Babski []
 - Fallback for screenshot i stedet for den anden # Simon [x] 29-10-2025
 - Fallback til publishers, hvis der ikke er en developer # Simon [x]29-10-2025
 - See more (inde på spil screen, så beskrivelsen ikke er for lang) # Simon [x] 29-10-2025
+- Vote andres ratings og se kommentarer inde på spil # Simon [x] 01-11-2025 
 
 ````

@@ -220,7 +220,7 @@ export const rateGameStyles = StyleSheet.create({
     },
     rateButtonText: {
         color: '#FFD700',
-        fontSize: 16,
+        fontSize: 14,
         fontWeight: 'bold',
         marginLeft: 8,
     },
@@ -238,7 +238,7 @@ export const rateGameStyles = StyleSheet.create({
     },
     wishlistButtonText: {
         color: '#4CAF50',
-        fontSize: 16,
+        fontSize: 13,
         fontWeight: 'bold',
         marginLeft: 8,
     },
@@ -248,6 +248,31 @@ export const rateGameStyles = StyleSheet.create({
     },
     wishlistButtonTextActive: {
         color: '#FF6B6B',
+    },
+    playedButton: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#2a2a2a',
+        paddingVertical: SPACING.md,
+        paddingHorizontal: SPACING.lg,
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: '#03A9F4',
+    },
+    playedButtonText: {
+        color: '#03A9F4',
+        fontSize: 13,
+        fontWeight: 'bold',
+        marginLeft: 8,
+    },
+    playedButtonActive: {
+        borderColor: '#00BCD4',
+        backgroundColor: '#1f2a2e',
+    },
+    playedButtonTextActive: {
+        color: '#00BCD4',
     },
     // Rating Modal Styles
     modalOverlay: {

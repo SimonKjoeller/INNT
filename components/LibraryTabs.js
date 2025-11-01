@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { libraryStyles } from '../styles/libraryStyles';
 import WantToPlayList from './WantToPlayList';
+import PlayedGamesList from './PlayedGamesList';
 import RatedGamesList from './RatedGamesList';
 import { useAuth } from './Auth';
 
@@ -15,6 +16,11 @@ const LibraryTabs = ({ navigation, userId }) => {
             key: 'wishlist',
             title: 'Want to Play',
             component: WantToPlayList
+        },
+        {
+            key: 'played',
+            title: 'Played',
+            component: PlayedGamesList
         },
         {
             key: 'rated',
@@ -41,6 +47,8 @@ const LibraryTabs = ({ navigation, userId }) => {
                         libraryStyles.tabText,
                         isActive ? libraryStyles.activeTabText : libraryStyles.inactiveTabText
                     ]}
+                    numberOfLines={1}
+                    ellipsizeMode="clip"
                 >
                     {tab.title}
                 </Text>
@@ -65,7 +73,14 @@ const LibraryTabs = ({ navigation, userId }) => {
         <View style={libraryStyles.container}>
             {/* Tab Navigation */}
             <View style={libraryStyles.tabContainer}>
-                {tabs.map(renderTabButton)}
+                {tabs.map((tab, index) => (
+                    <React.Fragment key={tab.key}>
+                        {renderTabButton(tab)}
+                        {index < tabs.length - 1 && (
+                            <View style={libraryStyles.tabDivider} />
+                        )}
+                    </React.Fragment>
+                ))}
             </View>
 
             {/* Tab Content */}
