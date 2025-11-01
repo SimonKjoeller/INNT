@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, FlatList, Image, Alert, ActivityIndicator, ScrollView, Modal, TextInput, Dimensions } from 'react-native';
+import { View, Text, TouchableOpacity, FlatList, Image, Alert, ActivityIndicator, ScrollView, Modal, TextInput, Dimensions, SafeAreaView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Slider from '@react-native-community/slider';
 import * as Haptics from 'expo-haptics';
@@ -12,6 +12,7 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import { db } from '../database/firebase';
 import styles from '../styles/screenStyles';
 import { rateGameComponentStyles, rateGameStyles } from '../styles/RateGameStyles';
+import GameRatingsThread from './GameRatingsThread';
 import { useAuth } from './Auth';
 
 
@@ -23,6 +24,14 @@ const formatDate = (dateString) => {
 
 const getGameInternalId = (gameData, gameIdStr) => {
     return gameData?.id || gameIdStr;
+};
+
+// Ensure consistent type for ratings' game_id: prefer number when numeric, else string (firebase key)
+const getNormalizedGameIdForRatings = (gameData, gameIdStr) => {
+    const raw = gameData?.id ?? gameIdStr;
+    const asNum = Number(raw);
+    if (Number.isFinite(asNum)) return asNum;
+    return String(raw);
 };
 
 const formatRating = (rating) => {
@@ -245,6 +254,8 @@ export const RateGameDetail = ({ gameId, navigation }) => {
     const [isOnWishlist, setIsOnWishlist] = useState(false);
     const [wishlistKey, setWishlistKey] = useState(null);
     const [existingRating, setExistingRating] = useState(null);
+    const [isPlayed, setIsPlayed] = useState(false);
+    const [playedKey, setPlayedKey] = useState(null);
     const [isSummaryExpanded, setIsSummaryExpanded] = useState(false);
     const [artworkRatios, setArtworkRatios] = useState({}); // uri -> (height/width)
     const { user } = useAuth();
@@ -300,6 +311,7 @@ export const RateGameDetail = ({ gameId, navigation }) => {
         if (gameIdStr) {
             fetchGameData();
             checkWishlistStatus();
+            checkPlayedStatus();
             checkExistingRating();
         }
     }, [gameIdStr, currentUserId]);
@@ -350,9 +362,9 @@ export const RateGameDetail = ({ gameId, navigation }) => {
                 setWishlistKey(null);
                 return;
             }
-            const wishlistRef = ref(db, 'userWishlist');
-            const wishlistQuery = query(wishlistRef, orderByChild('user_id'), equalTo(currentUserId));
-            const wishlistSnapshot = await get(wishlistQuery);
+            // Per-user path
+            const wishlistRef = ref(db, `users/${currentUserId}/wishlist`);
+            const wishlistSnapshot = await get(wishlistRef);
 
             if (wishlistSnapshot.exists()) {
                 const wishlistData = wishlistSnapshot.val();
@@ -406,15 +418,7 @@ export const RateGameDetail = ({ gameId, navigation }) => {
                 const ratingsData = ratingsSnapshot.val();
                 // Forsøg at få internal ID fra cache først
                 const cached = sessionCache.get(gameIdStr);
-                let gameInternalId = gameIdStr;
-                if (cached && cached.id) {
-                    gameInternalId = cached.id;
-                } else {
-                    const gameRef = ref(db, `games/${gameIdStr}`);
-                    const gameSnapshot = await get(gameRef);
-                    gameInternalId = gameSnapshot.exists() ? gameSnapshot.val().id : gameIdStr;
-                    if (gameSnapshot.exists()) sessionCache.set(gameIdStr, gameSnapshot.val());
-                }
+                let gameInternalId = getNormalizedGameIdForRatings(cached || gameData, gameIdStr);
 
                 const existingEntry = Object.entries(ratingsData).find(
                     ([key, ratingItem]) => ratingItem.game_id === gameInternalId
@@ -439,6 +443,53 @@ export const RateGameDetail = ({ gameId, navigation }) => {
         }
     };
 
+    // Tjek played-status
+    const checkPlayedStatus = async () => {
+        try {
+            if (!currentUserId) {
+                setIsPlayed(false);
+                setPlayedKey(null);
+                return;
+            }
+            const playedRef = ref(db, `users/${currentUserId}/played`);
+            const playedSnapshot = await get(playedRef);
+
+            if (playedSnapshot.exists()) {
+                const playedData = playedSnapshot.val();
+                // Forsøg at få internal ID fra cache først
+                const cached = sessionCache.get(gameIdStr);
+                let gameInternalId = gameIdStr;
+                if (cached && cached.id) {
+                    gameInternalId = cached.id;
+                } else {
+                    const gameRef = ref(db, `games/${gameIdStr}`);
+                    const gameSnapshot = await get(gameRef);
+                    gameInternalId = gameSnapshot.exists() ? gameSnapshot.val().id : gameIdStr;
+                    if (gameSnapshot.exists()) sessionCache.set(gameIdStr, gameSnapshot.val());
+                }
+
+                const existingEntry = Object.entries(playedData).find(
+                    ([key, playedItem]) => playedItem.game_id === gameInternalId
+                );
+
+                if (existingEntry) {
+                    setIsPlayed(true);
+                    setPlayedKey(existingEntry[0]);
+                } else {
+                    setIsPlayed(false);
+                    setPlayedKey(null);
+                }
+            } else {
+                setIsPlayed(false);
+                setPlayedKey(null);
+            }
+        } catch (error) {
+            console.error('Error checking played status:', error);
+            setIsPlayed(false);
+            setPlayedKey(null);
+        }
+    };
+
     const handleSubmitRating = async (rating, comment) => {
         try {
             if (!currentUserId) {
@@ -446,7 +497,7 @@ export const RateGameDetail = ({ gameId, navigation }) => {
                 return;
             }
             const ratingsRef = ref(db, 'userRatings');
-            const gameInternalId = getGameInternalId(gameData, gameIdStr);
+            const gameInternalId = getNormalizedGameIdForRatings(gameData, gameIdStr);
 
             // Tjek for eksisterende rating
             const existingSnapshot = await get(ratingsRef);
@@ -495,12 +546,12 @@ export const RateGameDetail = ({ gameId, navigation }) => {
                 Alert.alert('Login required', 'You need to be logged in to manage your wishlist.');
                 return;
             }
-            const wishlistRef = ref(db, 'userWishlist');
+            const wishlistRef = ref(db, `users/${currentUserId}/wishlist`);
             const gameInternalId = getGameInternalId(gameData, gameIdStr);
 
             if (isOnWishlist && wishlistKey) {
                 // Fjern fra wishlist
-                const wishlistItemRef = ref(db, `userWishlist/${wishlistKey}`);
+                const wishlistItemRef = ref(db, `users/${currentUserId}/wishlist/${wishlistKey}`);
                 await set(wishlistItemRef, null);
 
                 setIsOnWishlist(false);
@@ -527,6 +578,47 @@ export const RateGameDetail = ({ gameId, navigation }) => {
         } catch (error) {
             console.error('Error toggling wishlist:', error);
             Alert.alert('Error', 'Failed to update wishlist');
+        }
+    };
+
+    const handleTogglePlayed = async () => {
+        try {
+            if (!currentUserId) {
+                Alert.alert('Login required', 'You need to be logged in to manage your played list.');
+                return;
+            }
+            const playedRef = ref(db, `users/${currentUserId}/played`);
+            const gameInternalId = getGameInternalId(gameData, gameIdStr);
+
+            if (isPlayed && playedKey) {
+                // Fjern fra played
+                const playedItemRef = ref(db, `users/${currentUserId}/played/${playedKey}`);
+                await set(playedItemRef, null);
+
+                setIsPlayed(false);
+                setPlayedKey(null);
+                Alert.alert('Success', `${gameData.name} removed from your Played list!`);
+                console.log('✅ Removed from played:', gameData.name);
+            } else {
+                // Tilføj til played
+                const playedData = {
+                    game_id: gameInternalId,
+                    user_id: currentUserId,
+                    game_name: gameData.name,
+                    added_timestamp: new Date().toISOString(),
+                };
+
+                const newPlayedRef = push(playedRef);
+                await set(newPlayedRef, playedData);
+
+                setIsPlayed(true);
+                setPlayedKey(newPlayedRef.key);
+                Alert.alert('Success', `${gameData.name} added to your Played list!`);
+                console.log('✅ Added to played:', gameData.name);
+            }
+        } catch (error) {
+            console.error('Error toggling played:', error);
+            Alert.alert('Error', 'Failed to update Played list');
         }
     };
 
@@ -587,136 +679,181 @@ export const RateGameDetail = ({ gameId, navigation }) => {
     if (!gameData) return createLoadingView("Game not found");
 
     return (
-        <ScrollView style={rateGameStyles.container}>
-            {/* Header Image */}
-            <View style={[rateGameStyles.headerContainer, { height: headerHeight }]}>
-                {(() => {
-                    const uri = firstArtworkUri;
-                    const ratio = artworkRatios[uri];
-                    const isBanner = typeof ratio === 'number' && ratio < 0.2;
-                    return (
-                        <View style={{ width: screenWidth, height: '100%' }}>
-                            <Image
-                                source={{ uri }}
-                                style={rateGameStyles.headerBackdrop}
-                                resizeMode="cover"
-                                blurRadius={isBanner ? 20 : 0}
-                            />
-                            <Image
-                                source={{ uri }}
-                                style={rateGameStyles.headerImage}
-                                resizeMode={isBanner ? 'contain' : 'cover'}
-                            />
-                            <LinearGradient
-                                colors={["rgba(0,0,0,0.15)", "rgba(0,0,0,0.65)"]}
-                                style={rateGameStyles.headerGradient}
-                            />
-                        </View>
-                    );
-                })()}
-            </View>
-
-            {/* Content */}
-            <View style={rateGameStyles.contentContainer}>
-                <View style={rateGameStyles.gameInfoContainer}>
-                    <Text style={rateGameStyles.gameTitle}>{gameData.name}</Text>
-                    <Text style={rateGameStyles.gameYear}>
-                        {formatDate(gameData.first_release_date)}
-                    </Text>
-                    {getPrimaryCompany(gameData) && (
-                        <>
-                            <Text style={rateGameStyles.madeByLabel}>Made by:</Text>
-                            <Text style={rateGameStyles.gameCompany}>
-                                {getPrimaryCompany(gameData)}
-                            </Text>
-                        </>
-                    )}
+        <SafeAreaView style={rateGameStyles.container}>
+            <ScrollView style={rateGameStyles.container}>
+                {/* Header Image */}
+                <View style={[rateGameStyles.headerContainer, { height: headerHeight }]}>
+                    {(() => {
+                        const uri = firstArtworkUri;
+                        const ratio = artworkRatios[uri];
+                        const isBanner = typeof ratio === 'number' && ratio < 0.2;
+                        return (
+                            <View style={{ width: screenWidth, height: '100%' }}>
+                                <Image
+                                    source={{ uri }}
+                                    style={rateGameStyles.headerBackdrop}
+                                    resizeMode="cover"
+                                    blurRadius={isBanner ? 20 : 0}
+                                />
+                                <Image
+                                    source={{ uri }}
+                                    style={rateGameStyles.headerImage}
+                                    resizeMode={isBanner ? 'contain' : 'cover'}
+                                />
+                                <LinearGradient
+                                    colors={["rgba(0,0,0,0.15)", "rgba(0,0,0,0.65)"]}
+                                    style={rateGameStyles.headerGradient}
+                                />
+                            </View>
+                        );
+                    })()}
                 </View>
 
-                <Image
-                    source={{ uri: gameData.coverUrl }}
-                    style={rateGameStyles.gameCover}
-                    resizeMode="cover"
-                />
-            </View>
+                {/* Content */}
+                <View style={rateGameStyles.contentContainer}>
+                    <View style={rateGameStyles.gameInfoContainer}>
+                        <Text style={rateGameStyles.gameTitle}>{gameData.name}</Text>
+                        <Text style={rateGameStyles.gameYear}>
+                            {formatDate(gameData.first_release_date)}
+                        </Text>
+                        {getPrimaryCompany(gameData) && (
+                            <>
+                                <Text style={rateGameStyles.madeByLabel}>Made by:</Text>
+                                <Text style={rateGameStyles.gameCompany}>
+                                    {getPrimaryCompany(gameData)}
+                                </Text>
+                            </>
+                        )}
+                    </View>
 
-            {/* Summary (collapsed) under image, full width */}
-            {!isSummaryExpanded && (
-                <TouchableOpacity
-                    onPress={() => setIsSummaryExpanded(true)}
-                    activeOpacity={0.9}
-                    accessibilityRole="button"
-                    accessibilityLabel="Expand game description"
-                    style={rateGameStyles.collapsedSummaryContainer}
-                >
-                    <Text
-                        style={rateGameStyles.summaryFull}
-                        numberOfLines={4}
-                        ellipsizeMode="tail"
-                    >
-                        {gameData.summary || 'No summary available.'}
-                    </Text>
-                    <View pointerEvents="none" style={rateGameStyles.summaryFade} />
-                </TouchableOpacity>
-            )}
-
-            {/* Summary full-width (expanded) — fylder resten af skærmen under billedet */}
-            {isSummaryExpanded && (
-                <TouchableOpacity
-                    onPress={() => setIsSummaryExpanded(false)}
-                    activeOpacity={0.8}
-                    accessibilityRole="button"
-                    accessibilityLabel="Collapse game description"
-                    style={rateGameStyles.fullSummaryContainer}
-                >
-                    <Text style={rateGameStyles.summaryFull}>
-                        {gameData.summary || 'No summary available.'}
-                    </Text>
-                </TouchableOpacity>
-            )}
-
-            {/* Action Buttons */}
-            <View style={rateGameStyles.actionButtonsContainer}>
-                <TouchableOpacity
-                    style={rateGameStyles.rateButton}
-                    onPress={() => setRatingModalVisible(true)}
-                >
-                    <Icon name="star" size={20} color="#FFD700" />
-                    <Text style={rateGameStyles.rateButtonText}>
-                        {existingRating ? 'Update Rating' : 'Rate Game'}
-                    </Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                    style={[
-                        rateGameStyles.wishlistButton,
-                        isOnWishlist && rateGameStyles.wishlistButtonActive
-                    ]}
-                    onPress={handleToggleWishlist}
-                >
-                    <Icon
-                        name={isOnWishlist ? "bookmark" : "bookmark-outline"}
-                        size={20}
-                        color={isOnWishlist ? "#FF6B6B" : "#4CAF50"}
+                    <Image
+                        source={{ uri: gameData.coverUrl }}
+                        style={rateGameStyles.gameCover}
+                        resizeMode="cover"
                     />
-                    <Text style={[
-                        rateGameStyles.wishlistButtonText,
-                        isOnWishlist && rateGameStyles.wishlistButtonTextActive
-                    ]}>
-                        {isOnWishlist ? "Remove from Wishlist" : "Add to Wishlist"}
-                    </Text>
-                </TouchableOpacity>
-            </View>
+                </View>
 
-            {/* Rating Modal */}
-            <RatingModal
-                visible={ratingModalVisible}
-                onClose={() => setRatingModalVisible(false)}
-                gameData={gameData}
-                onSubmitRating={handleSubmitRating}
-                existingRating={existingRating}
-            />
-        </ScrollView>
+                {/* Summary (collapsed) under image, full width */}
+                {!isSummaryExpanded && (
+                    <TouchableOpacity
+                        onPress={() => setIsSummaryExpanded(true)}
+                        activeOpacity={0.9}
+                        accessibilityRole="button"
+                        accessibilityLabel="Expand game description"
+                        style={rateGameStyles.collapsedSummaryContainer}
+                    >
+                        <Text
+                            style={rateGameStyles.summaryFull}
+                            numberOfLines={4}
+                            ellipsizeMode="tail"
+                        >
+                            {gameData.summary || 'No summary available.'}
+                        </Text>
+                        <View pointerEvents="none" style={rateGameStyles.summaryFade} />
+                    </TouchableOpacity>
+                )}
+
+                {/* Summary full-width (expanded) — fylder resten af skærmen under billedet */}
+                {isSummaryExpanded && (
+                    <TouchableOpacity
+                        onPress={() => setIsSummaryExpanded(false)}
+                        activeOpacity={0.8}
+                        accessibilityRole="button"
+                        accessibilityLabel="Collapse game description"
+                        style={rateGameStyles.fullSummaryContainer}
+                    >
+                        <Text style={rateGameStyles.summaryFull}>
+                            {gameData.summary || 'No summary available.'}
+                        </Text>
+                    </TouchableOpacity>
+                )}
+
+                {/* Action Buttons */}
+                <View style={rateGameStyles.actionButtonsContainer}>
+                    <TouchableOpacity
+                        style={rateGameStyles.rateButton}
+                        onPress={() => setRatingModalVisible(true)}
+                    >
+                        <Icon name="star" size={20} color="#FFD700" />
+                        <Text
+                            style={rateGameStyles.rateButtonText}
+                            numberOfLines={1}
+                            ellipsizeMode="tail"
+                            adjustsFontSizeToFit={true}
+                            minimumFontScale={0.85}
+                        >
+                            {existingRating ? 'Update Rating' : 'Rate Game'}
+                        </Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        style={[
+                            rateGameStyles.wishlistButton,
+                            isOnWishlist && rateGameStyles.wishlistButtonActive
+                        ]}
+                        onPress={handleToggleWishlist}
+                    >
+                        <Icon
+                            name={isOnWishlist ? "bookmark" : "bookmark-outline"}
+                            size={20}
+                            color={isOnWishlist ? "#FF6B6B" : "#4CAF50"}
+                        />
+                        <Text style={[
+                            rateGameStyles.wishlistButtonText,
+                            isOnWishlist && rateGameStyles.wishlistButtonTextActive
+                        ]}
+                            numberOfLines={1}
+                            ellipsizeMode="tail"
+                            adjustsFontSizeToFit={true}
+                            minimumFontScale={0.8}
+                        >
+                            {isOnWishlist ? "Remove from Wishlist" : "Add to Wishlist"}
+                        </Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        style={[
+                            rateGameStyles.playedButton,
+                            isPlayed && rateGameStyles.playedButtonActive
+                        ]}
+                        onPress={handleTogglePlayed}
+                    >
+                        <Icon
+                            name={isPlayed ? "checkmark-circle" : "checkmark-circle-outline"}
+                            size={20}
+                            color={isPlayed ? "#00BCD4" : "#03A9F4"}
+                        />
+                        <Text style={[
+                            rateGameStyles.playedButtonText,
+                            isPlayed && rateGameStyles.playedButtonTextActive
+                        ]}
+                            numberOfLines={1}
+                            ellipsizeMode="tail"
+                            adjustsFontSizeToFit={true}
+                            minimumFontScale={0.8}
+                        >
+                            {isPlayed ? "Unmark Played" : "Mark as Played"}
+                        </Text>
+                    </TouchableOpacity>
+                </View>
+
+                {/* Community Ratings */}
+                <GameRatingsThread
+                    gameInternalId={getNormalizedGameIdForRatings(gameData, gameIdStr)}
+                    currentUserId={currentUserId}
+                    includeSelf={true}
+                />
+
+                {/* Rating Modal */}
+                <RatingModal
+                    visible={ratingModalVisible}
+                    onClose={() => setRatingModalVisible(false)}
+                    gameData={gameData}
+                    onSubmitRating={handleSubmitRating}
+                    existingRating={existingRating}
+                />
+            </ScrollView>
+        </SafeAreaView>
     );
 };
 

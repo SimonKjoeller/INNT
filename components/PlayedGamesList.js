@@ -8,47 +8,47 @@ import GameListItem from './GameListItem';
 import { useAuth } from './Auth';
 import { useFocusEffect } from '@react-navigation/native';
 
-const WantToPlayList = ({ navigation, userId }) => {
-    const [wishlistGames, setWishlistGames] = useState([]);
+const PlayedGamesList = ({ navigation, userId }) => {
+    const [playedGames, setPlayedGames] = useState([]);
     const [loading, setLoading] = useState(true);
     const { user } = useAuth();
     const effectiveUserId = useMemo(() => userId || user?.uid || null, [userId, user]);
 
     useEffect(() => {
-        fetchWishlist();
+        fetchPlayed();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [effectiveUserId]);
 
-    // Refetch when Library screen gains focus (e.g., user taps bottom tab or returns from game)
+    // Refetch when Library screen gains focus
     useFocusEffect(
         useCallback(() => {
-            fetchWishlist();
+            fetchPlayed();
         }, [effectiveUserId])
     );
 
-    const fetchWishlist = async () => {
+    const fetchPlayed = async () => {
         try {
             setLoading(true);
             const database = getDatabase(firebaseApp);
             if (!effectiveUserId) {
-                setWishlistGames([]);
+                setPlayedGames([]);
                 return;
             }
 
-            // Hent wishlist for brugeren (per-user path)
-            const wishlistRef = ref(database, `users/${effectiveUserId}/wishlist`);
-            const wishlistSnapshot = await get(wishlistRef);
+            // Hent played-liste for brugeren (per-user path)
+            const playedRef = ref(database, `users/${effectiveUserId}/played`);
+            const playedSnapshot = await get(playedRef);
 
-            if (wishlistSnapshot.exists()) {
-                const wishlistData = wishlistSnapshot.val();
-                const wishlistArray = Object.keys(wishlistData).map(key => ({
-                    ...wishlistData[key],
-                    wishlistKey: key
+            if (playedSnapshot.exists()) {
+                const playedData = playedSnapshot.val();
+                const playedArray = Object.keys(playedData).map(key => ({
+                    ...playedData[key],
+                    playedKey: key
                 }));
 
-                // Hent kun de spil som findes i wishlisten (undgår at hente hele 'games' tabellen)
+                // Hent kun de spil som findes i played (undgår at hente hele 'games' tabellen)
                 const gamesRef = ref(database, 'games');
-                const uniqueIds = [...new Set(wishlistArray.map(w => w.game_id))];
+                const uniqueIds = [...new Set(playedArray.map(p => p.game_id))];
 
                 // Parallelle forespørgsler pr. unik game_id
                 const gameFetchPromises = uniqueIds.map(id =>
@@ -70,34 +70,34 @@ const WantToPlayList = ({ navigation, userId }) => {
                     }
                 });
 
-                // Merge spil-data først, så wishlist-itemets egne felter (fx. tilføjelses-timestamp) bevares
-                const enrichedWishlist = wishlistArray.map(wishlistItem => {
-                    const match = gamesById[wishlistItem.game_id];
+                // Merge spil-data først, så played-itemets egne felter (fx. tilføjelses-timestamp) bevares
+                const enrichedPlayed = playedArray.map(playedItem => {
+                    const match = gamesById[playedItem.game_id];
                     if (!match) {
-                        console.warn(`Game not found for ID: ${wishlistItem.game_id}`);
+                        console.warn(`Game not found for ID: ${playedItem.game_id}`);
                         return null;
                     }
                     const { firebaseKey, data: gameData } = match;
                     return {
                         ...gameData,        // spillets data først
-                        ...wishlistItem,    // wishlist-item overskriver ved konflikt
+                        ...playedItem,      // played-item overskriver ved konflikt
                         firebaseKey,        // Firebase key for navigation
-                        gameId: wishlistItem.game_id,
+                        gameId: playedItem.game_id,
                     };
                 }).filter(item => item !== null);
 
                 // Sorter efter added_timestamp (nyeste først)
-                enrichedWishlist.sort((a, b) =>
+                enrichedPlayed.sort((a, b) =>
                     new Date(b.added_timestamp) - new Date(a.added_timestamp)
                 );
 
-                setWishlistGames(enrichedWishlist);
+                setPlayedGames(enrichedPlayed);
             } else {
-                setWishlistGames([]);
+                setPlayedGames([]);
             }
         } catch (error) {
-            console.error('Error fetching wishlist:', error);
-            setWishlistGames([]);
+            console.error('Error fetching played list:', error);
+            setPlayedGames([]);
         } finally {
             setLoading(false);
         }
@@ -110,16 +110,16 @@ const WantToPlayList = ({ navigation, userId }) => {
     const renderEmptyState = () => (
         <View style={libraryStyles.emptyContainer}>
             <Icon
-                name="bookmark-outline"
+                name="checkmark-done-outline"
                 size={64}
                 color="#444444"
                 style={libraryStyles.emptyIcon}
             />
             <Text style={libraryStyles.emptyTitle}>
-                Ingen spil i din ønskelist
+                Ingen spil i din Played-liste
             </Text>
             <Text style={libraryStyles.emptySubtitle}>
-                Spil du tilføjer til din ønskelist vil vises her.{'\n'}
+                Spil du markerer som spillet vil vises her.{'\n'}
                 Find spil på forsiden eller søg efter dem!
             </Text>
         </View>
@@ -128,7 +128,7 @@ const WantToPlayList = ({ navigation, userId }) => {
     const renderGameItem = ({ item }) => (
         <GameListItem
             game={item}
-            type="wishlist"
+            type="played"
             onPress={handleGamePress}
             showAddedDate={true}
         />
@@ -139,7 +139,7 @@ const WantToPlayList = ({ navigation, userId }) => {
             <View style={libraryStyles.loadingContainer}>
                 <ActivityIndicator size="large" color="#6C5CE7" />
                 <Text style={libraryStyles.loadingText}>
-                    Indlæser ønskeliste...
+                    Indlæser Played-liste...
                 </Text>
             </View>
         );
@@ -147,13 +147,13 @@ const WantToPlayList = ({ navigation, userId }) => {
 
     return (
         <View style={libraryStyles.contentContainer}>
-            {wishlistGames.length === 0 ? (
+            {playedGames.length === 0 ? (
                 renderEmptyState()
             ) : (
                 <FlatList
-                    data={wishlistGames}
+                    data={playedGames}
                     renderItem={renderGameItem}
-                    keyExtractor={(item) => item.wishlistKey}
+                    keyExtractor={(item) => item.playedKey}
                     contentContainerStyle={libraryStyles.gamesList}
                     showsVerticalScrollIndicator={false}
                 />
@@ -162,4 +162,6 @@ const WantToPlayList = ({ navigation, userId }) => {
     );
 };
 
-export default WantToPlayList;
+export default PlayedGamesList;
+
+

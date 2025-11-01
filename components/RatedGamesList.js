@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { View, Text, FlatList, ActivityIndicator } from 'react-native';
 import { ref, get, query, orderByChild, equalTo } from 'firebase/database';
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -6,6 +6,7 @@ import { db } from '../database/firebase';
 import { libraryStyles } from '../styles/libraryStyles';
 import GameListItem from './GameListItem';
 import { useAuth } from './Auth';
+import { useFocusEffect } from '@react-navigation/native';
 
 const RatedGamesList = ({ navigation, userId }) => {
     const [ratedGames, setRatedGames] = useState([]);
@@ -17,6 +18,13 @@ const RatedGamesList = ({ navigation, userId }) => {
         fetchRatedGames();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [effectiveUserId]);
+
+    // Refetch when Library screen gains focus
+    useFocusEffect(
+        useCallback(() => {
+            fetchRatedGames();
+        }, [effectiveUserId])
+    );
 
     const fetchRatedGames = async () => {
         try {

@@ -15,6 +15,11 @@ export const libraryStyles = StyleSheet.create({
         borderRadius: 12,
         overflow: 'hidden',
     },
+    tabDivider: {
+        width: 1,
+        backgroundColor: '#3a3a3a',
+        opacity: 0.8,
+    },
 
     tabButton: {
         flex: 1,
@@ -33,7 +38,7 @@ export const libraryStyles = StyleSheet.create({
     },
 
     tabText: {
-        fontSize: 14,
+        fontSize: 13,
         fontWeight: '600',
         color: '#ffffff',
     },
