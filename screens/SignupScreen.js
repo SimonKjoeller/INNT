@@ -10,6 +10,7 @@ export default function SignupScreen({ navigation }) {
   // Henter signup funktionen fra Auth i component/Auth.js
   const { signup, error, loadingAction } = useAuth();
 // Lokale state variabler til formularens inputfelter
+  const [username, setUsername] = useState(''); // Brugerens valgte brugernavn
   const [email, setEmail] = useState(''); // Brugerens email
   const [password, setPassword] = useState(''); // Brugerens valgte adgangskode
   const [confirmPassword, setConfirmPassword] = useState(''); // Bekræftelse af adgangskode
@@ -18,7 +19,7 @@ export default function SignupScreen({ navigation }) {
   const [loading, setLoading] = useState(false); 
 
   // Simpel validering: alle felter skal være udfyldt (trim fjerner mellemrum i kanterne)
-  const allFilled = email.trim() && password.trim() && confirmPassword.trim();
+  const allFilled = username.trim() && email.trim() && password.trim() && confirmPassword.trim();
 
   // Funktion der køres når brugeren trykker "Opret konto"
   const handleSignup = async () => {
@@ -29,7 +30,7 @@ export default function SignupScreen({ navigation }) {
     }
     setLoading(true);
     try {
-      await signup({ email, password });
+  await signup({ email, password, username });
     } catch (e) {
       // error handled by context
     } finally {
@@ -42,6 +43,28 @@ export default function SignupScreen({ navigation }) {
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
       <View style={styles.container}>
         <Text style={styles.title}>Create Account</Text>
+
+        {/* Username */}
+        <TextInput
+          label="Username"
+          value={username}
+          onChangeText={setUsername}
+          mode="outlined"
+          style={styles.input}
+          textColor="#eeeaeaff"
+          autoCapitalize="none"
+          autoComplete="username"
+          placeholderTextColor="#fcf7f7ff"
+          outlineColor="#818181ff"
+          activeOutlineColor="#cbcbccff"
+          selectionColor="#fffbfbff"
+          theme={{
+            colors: {
+              primary: '#520f0fff',
+              onSurfaceVariant: '#ceced1ff',
+            },
+          }}
+        />
 
         {/* Email */}
         <TextInput

@@ -14,7 +14,7 @@
 - Caching - Loading # Jæger [x] - 30-10-2025
 - Ratings skal maks være 0,5-separeret # Simon [x] 29-10-2025
 - Baggrundsbillede formatering (720) # Simon [x] måske done? 29-10-2025
-- Profile Fetch - username # Chrille []
+- Profile Fetch - username ID # Chrille []
   - Nice to have: Gamification. Evt. xp-system # Chrille []
 - Profile search - follow account, view profile osv. # Babski & Jæger []
 - Notifikationer # Chrille []

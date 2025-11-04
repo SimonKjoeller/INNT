@@ -7,7 +7,7 @@ import {
   onAuthStateChanged,
   updateProfile
 } from 'firebase/auth';
-import { ref, set, serverTimestamp as _serverTimestamp } from 'firebase/database';
+import { ref, set, get, serverTimestamp as _serverTimestamp } from 'firebase/database';
 
 const AuthContext = createContext();
 
@@ -15,6 +15,8 @@ const AuthContext = createContext();
   // Auth context provider
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null); // Firebase user object eller null
+  const [profile, setProfile] = useState(null); // Brugerprofil fra RTDB
+  const [username, setUsername] = useState(null); // Simpel adgang til brugernavn
 
   // initializing starter som true = app’en er i “første load / tjekker login-status”.
   // setInitializing(false) kaldes, når du har fået svar fra Firebase om der er en bruger eller ej.
@@ -59,6 +61,29 @@ export function AuthProvider({ children }) {
       unsubscribe();
     };
   }, []); // Tom dependency array: vi skal kun sætte lytteren én gang
+  // Hent en simpel profil/brugernavn når bruger ændres
+  useEffect(() => {
+    const loadProfile = async () => {
+      if (!user?.uid) {
+        setProfile(null);
+        setUsername(null);
+        return;
+      }
+      try {
+        const snap = await get(ref(db, `users/${user.uid}`));
+        const val = snap.exists() ? snap.val() : null;
+        setProfile(val);
+        // Brug rækkefølge: RTDB username -> RTDB displayName -> Auth displayName
+        const name = val?.username || val?.displayName || user.displayName || null;
+        setUsername(name);
+      } catch (e) {
+        setProfile(null);
+        setUsername(user?.displayName || null);
+      }
+    };
+    loadProfile();
+  }, [user?.uid]);
+
 
 
 
@@ -66,30 +91,46 @@ export function AuthProvider({ children }) {
 
 
   // Signup funktion
-  const signup = useCallback(async ({ email, password }) => {
+  const signup = useCallback(async ({ email, password, username }) => {
     setError(null);
     setLoadingAction(true);
     try {
-      const cred = await createUserWithEmailAndPassword(auth, email, password);
-      // Eksempel: sæt displayName til del før @
-      const nameCandidate = email.split('@')[0];
-      if (cred.user && !cred.user.displayName) {
-        await updateProfile(cred.user, { displayName: nameCandidate });
+      const usernameKey = (username || '').trim().toLowerCase();
+      if (!usernameKey) {
+        throw new Error('Please choose a username.');
       }
-      // Opret en Realtime Database node for brugeren (path: users/{uid})
-      try {
+      // Tjek om brugernavn er ledigt
+      const usernameRef = ref(db, `usernames/${usernameKey}`);
+      const usernameSnap = await get(usernameRef);
+      if (usernameSnap.exists()) {
+        throw new Error('Username already taken.');
+      }
 
-        // Dette skal ændres så det henter fra fra databasen i stedet for det er hardcodet
-  await set(ref(db, `users/${cred.user.uid}`), {
+      const cred = await createUserWithEmailAndPassword(auth, email, password);
+      // Sæt displayName til det valgte brugernavn
+      if (cred.user) {
+        await updateProfile(cred.user, { displayName: usernameKey });
+      }
+      // Opret bruger i RTDB: map brugernavn -> uid og gem profil både pr. username og pr. uid
+      try {
+        const profile = {
+          uid: cred.user.uid,
           email: cred.user.email,
-          displayName: cred.user.displayName || nameCandidate,
-          createdAt: Date.now(), // simpelt timestamp (RTDB serverTimestamp kræver special placeholder)
+          username: usernameKey,
+          displayName: usernameKey,
+          createdAt: Date.now(),
           stats: {
             posts: 0,
             likes: 0,
             level: 1,
-          }
-        });
+          },
+        };
+        // reservation af brugernavn
+        await set(ref(db, `usernames/${usernameKey}`), { uid: cred.user.uid, createdAt: Date.now() });
+        // profil gemt pr. brugernavn
+        await set(ref(db, `usersByUsername/${usernameKey}`), profile);
+        // profil gemt pr. uid (kompatibilitet)
+        await set(ref(db, `users/${cred.user.uid}`), profile);
       } catch (writeErr) {
         console.log('Realtime DB user write failed:', writeErr.message);
       }
@@ -139,6 +180,8 @@ export function AuthProvider({ children }) {
   // Auth context value
   const value = {
     user,
+    profile,
+    username,
     initializing,
     error,
     loadingAction,
