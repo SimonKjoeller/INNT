@@ -86,6 +86,12 @@ const GameSearchBar = ({ navigation }) => {
     navigation.navigate('RateGame', { gameId: game.firebaseKey, fromScreen: 'Search' });
   };
 
+  const handleBlur = () => {
+    // Clear search text når tastaturet lukkes
+    setSearchText('');
+    setSuggestions([]);
+  };
+
   return (
     <View style={styles.searchContainer}>
       <TextInput
@@ -94,6 +100,7 @@ const GameSearchBar = ({ navigation }) => {
         placeholderTextColor="#8E8E93"
         value={searchText}
         onChangeText={setSearchText}
+        onBlur={handleBlur}
         returnKeyType="search"
         editable={true}
       />
