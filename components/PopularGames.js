@@ -96,7 +96,13 @@ const PopularGames = ({ navigation }) => {
     // Når data er hentet, vises spilkortene i en horisontal scroll
     return (
         <View style={popularGamesStyles.container}>
-            <Text style={popularGamesStyles.title}>Popular Games</Text>
+            <TouchableOpacity 
+                style={popularGamesStyles.titleContainer}
+                onPress={() => navigation.navigate('Trending')}
+            >
+                <Text style={popularGamesStyles.title}>Popular Games</Text>
+                <Text style={popularGamesStyles.arrow}>›</Text>
+            </TouchableOpacity>
             <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}

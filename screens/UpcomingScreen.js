@@ -1,4 +1,4 @@
-//work in progress
+
 import React, { useState, useEffect } from 'react';
 import {
   View,

@@ -38,6 +38,20 @@ const HomeStack = () => {
         }}
       />
       <Stack.Screen
+        name="Trending"
+        component={TrendingScreen}
+        options={{
+          title: 'Trending',
+        }}
+      />
+      <Stack.Screen
+        name="Upcoming"
+        component={UpcomingScreen}
+        options={{
+          title: 'Upcoming',
+        }}
+      />
+      <Stack.Screen
         name="RateGame"
         component={RateGameScreen}
         options={{
