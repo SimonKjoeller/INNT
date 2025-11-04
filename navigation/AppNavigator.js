@@ -78,6 +78,13 @@ const SearchStack = () => {
           title: 'Upcoming',
         }}
       />
+      <Stack.Screen
+        name="RateGame"
+        component={RateGameScreen}
+        options={{
+          title: 'Rate Game',
+        }}
+      />
     </Stack.Navigator>
   );
 };
