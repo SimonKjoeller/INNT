@@ -7,7 +7,7 @@ import {
   onAuthStateChanged,
   updateProfile
 } from 'firebase/auth';
-import { ref, set, get, serverTimestamp as _serverTimestamp } from 'firebase/database';
+import { ref, set, get, onValue, off, serverTimestamp as _serverTimestamp } from 'firebase/database';
 
 const AuthContext = createContext();
 
@@ -61,27 +61,23 @@ export function AuthProvider({ children }) {
       unsubscribe();
     };
   }, []); // Tom dependency array: vi skal kun sætte lytteren én gang
-  // Hent en simpel profil/brugernavn når bruger ændres
+  // Hent og hold profil/brugernavn opdateret i realtime når bruger ændres
   useEffect(() => {
-    const loadProfile = async () => {
-      if (!user?.uid) {
-        setProfile(null);
-        setUsername(null);
-        return;
-      }
-      try {
-        const snap = await get(ref(db, `users/${user.uid}`));
-        const val = snap.exists() ? snap.val() : null;
-        setProfile(val);
-        // Brug rækkefølge: RTDB username -> RTDB displayName -> Auth displayName
-        const name = val?.username || val?.displayName || user.displayName || null;
-        setUsername(name);
-      } catch (e) {
-        setProfile(null);
-        setUsername(user?.displayName || null);
-      }
+    if (!user?.uid) {
+      setProfile(null);
+      setUsername(null);
+      return;
+    }
+    const userRef = ref(db, `users/${user.uid}`);
+    const handler = (snap) => {
+      const val = snap.exists() ? snap.val() : null;
+      setProfile(val);
+      // Brug rækkefølge: RTDB username -> RTDB displayName -> Auth displayName
+      const name = val?.username || val?.displayName || user.displayName || null;
+      setUsername(name);
     };
-    loadProfile();
+    onValue(userRef, handler);
+    return () => off(userRef, 'value', handler);
   }, [user?.uid]);
 
 
@@ -122,7 +118,7 @@ export function AuthProvider({ children }) {
           stats: {
             posts: 0,
             likes: 0,
-            level: 1,
+            level: 0,
           },
         };
         // reservation af brugernavn

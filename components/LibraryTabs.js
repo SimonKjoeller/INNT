@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { libraryStyles } from '../styles/libraryStyles';
 import WantToPlayList from './WantToPlayList';
@@ -6,8 +6,8 @@ import PlayedGamesList from './PlayedGamesList';
 import RatedGamesList from './RatedGamesList';
 import { useAuth } from './Auth';
 
-const LibraryTabs = ({ navigation, userId }) => {
-    const [activeTab, setActiveTab] = useState('wishlist');
+const LibraryTabs = ({ navigation, userId, initialTab }) => {
+    const [activeTab, setActiveTab] = useState(initialTab || 'wishlist');
     const { user } = useAuth();
     const effectiveUserId = useMemo(() => userId || user?.uid || null, [userId, user]);
 
@@ -28,6 +28,16 @@ const LibraryTabs = ({ navigation, userId }) => {
             component: RatedGamesList
         }
     ];
+
+    // Opdater aktiv fane hvis initialTab ændres via navigation
+    useEffect(() => {
+        if (!initialTab) return;
+        const keys = tabs.map(t => t.key);
+        if (keys.includes(initialTab)) {
+            setActiveTab(initialTab);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [initialTab]);
 
     const renderTabButton = (tab) => {
         const isActive = activeTab === tab.key;
