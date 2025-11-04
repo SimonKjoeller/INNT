@@ -11,11 +11,13 @@ import HomeScreen from '../screens/HomeScreen';
 import SearchScreen from '../screens/SearchScreen';
 import LibraryScreen from '../screens/LibraryScreen';
 import ProfileScreen from '../screens/ProfileScreen';
+import EditProfileScreen from '../screens/EditProfileScreen';
 import TrendingScreen from '../screens/TrendingScreen';
 import UpcomingScreen from '../screens/UpcomingScreen';
 import RateGameScreen from '../screens/RateGameScreen';
 import LoginScreen from '../screens/LoginScreen';
 import SignupScreen from '../screens/SignupScreen';
+import LevelUpOverlay from '../components/LevelUpOverlay';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -130,6 +132,32 @@ const LibraryStack = () => {
   );
 };
 
+const ProfileStack = () => {
+  return (
+    <Stack.Navigator
+      screenOptions={{
+        headerStyle: navigationStyles.headerStyle,
+        headerTintColor: navigationStyles.headerTintColor,
+        headerTitleStyle: navigationStyles.headerTitleStyle,
+      }}
+    >
+      <Stack.Screen
+        name="ProfileMain"
+        component={ProfileScreen}
+        options={{
+          title: 'Profile',
+        }}
+      />
+      <Stack.Screen
+        name="EditProfile"
+        component={EditProfileScreen}
+        options={{
+          title: 'Edit Profile',
+        }}
+      />
+    </Stack.Navigator>
+  );
+};
 
 
 const AppNavigator = () => {
@@ -220,10 +248,11 @@ const AppNavigator = () => {
         />
         <Tab.Screen
           name="Profile"
-          component={ProfileScreen}
+          component={ProfileStack}
           options={{
             title: 'Profile',
             tabBarLabel: '',
+            headerShown: false,
           }}
         />
       </Tab.Navigator>
@@ -232,9 +261,12 @@ const AppNavigator = () => {
 
   return (
     <AuthProvider>
-      <NavigationContainer>
-        <RootNavigator />
-      </NavigationContainer>
+      <>
+        <NavigationContainer>
+          <RootNavigator />
+        </NavigationContainer>
+        <LevelUpOverlay />
+      </>
     </AuthProvider>
   );
 };

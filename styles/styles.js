@@ -128,6 +128,69 @@ export const styles = StyleSheet.create({
     marginTop: 4,
   },
 
+  // Gamer header
+  headerGradient: {
+    borderRadius: 16,
+    paddingVertical: 16,
+    paddingHorizontal: 12,
+    marginBottom: 16,
+  },
+  gamerTag: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#ffffff',
+    letterSpacing: 0.5,
+  },
+  avatarRing: {
+    borderWidth: 2,
+    borderColor: '#6756fcff',
+    borderRadius: 26,
+    padding: 3,
+    marginBottom: 6,
+  },
+  avatar: {
+    width: 80,
+    height: 80,
+    borderRadius: 20,
+    marginBottom: 4,
+  },
+  levelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 4,
+    marginBottom: 8,
+  },
+  levelBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
+    backgroundColor: 'rgba(0,0,0,0.25)'
+  },
+  levelBadgeText: {
+    color: '#ffffff',
+    fontWeight: '700',
+    fontSize: 12,
+  },
+  levelXPText: {
+    color: '#e0e0e0',
+    fontSize: 12,
+  },
+  progressBar: {
+    width: '85%',
+    height: 6,
+    borderRadius: 6,
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: '#00e0ff',
+  },
+
 
   // Række med statistik kort
   statRow: {
@@ -146,6 +209,9 @@ export const styles = StyleSheet.create({
     paddingVertical: 16,
     paddingHorizontal: 12,
     alignItems: 'center',
+  },
+  statIcon: {
+    marginBottom: 6,
   },
   statValue: {
     fontSize: 22,
@@ -213,5 +279,86 @@ export const styles = StyleSheet.create({
   },
   footerSpacer: {
     height: 40,
-  }
+  },
+
+  // Badges styles
+  badgesContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 8,
+  },
+  badgesHeader: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginTop: 10,
+    justifyContent: 'center',
+  },
+  badgeChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 999,
+    backgroundColor: '#2a2d39',
+  },
+  badgeText: {
+    color: '#e7e7e7',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  badgesHint: {
+    color: '#9aa0a6',
+    fontSize: 12,
+  },
+
+  // Level up overlay
+  levelUpOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  levelUpCard: {
+    width: '78%',
+    backgroundColor: '#22252d',
+    borderRadius: 16,
+    paddingVertical: 18,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 6,
+  },
+  levelUpIconWrap: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 10,
+  },
+  levelUpTitle: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: '#ffffff',
+    marginBottom: 4,
+  },
+  levelUpSubtitle: {
+    fontSize: 14,
+    color: '#d9d9d9',
+  },
+  levelUpCloseText: {
+    color: '#9aa0a6',
+    fontSize: 12,
+    textDecorationLine: 'underline',
+  },
 });

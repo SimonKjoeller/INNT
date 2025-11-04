@@ -3,11 +3,12 @@ import { View, SafeAreaView } from 'react-native';
 import LibraryTabs from '../components/LibraryTabs';
 import { useAuth } from '../components/Auth';
 
-const LibraryScreen = ({ navigation }) => {
+const LibraryScreen = ({ navigation, route }) => {
   const { user } = useAuth();
+  const initialTab = route?.params?.initialTab;
   return (
     <SafeAreaView style={{ flex: 1 }}>
-      <LibraryTabs navigation={navigation} userId={user?.uid} />
+      <LibraryTabs navigation={navigation} userId={user?.uid} initialTab={initialTab} />
     </SafeAreaView>
   );
 };
