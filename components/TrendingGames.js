@@ -90,7 +90,13 @@ const TrendingGames = ({ navigation }) => {
 
     return (
         <View style={popularGamesStyles.container}>
-            <Text style={popularGamesStyles.title}>Trending Games</Text>
+            <TouchableOpacity 
+                style={popularGamesStyles.titleContainer}
+                onPress={() => navigation.navigate('Trending')}
+            >
+                <Text style={popularGamesStyles.title}>Trending Games</Text>
+                <Text style={popularGamesStyles.arrow}>›</Text>
+            </TouchableOpacity>
             <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}

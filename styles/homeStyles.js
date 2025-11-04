@@ -25,12 +25,22 @@ export const popularGamesStyles = StyleSheet.create({
     container: {
         marginVertical: 8,
     },
+    titleContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingHorizontal: 20,
+        marginBottom: 11,
+    },
     title: {
         color: '#fff',
         fontSize: 18,
         fontWeight: 'bold',
-        marginLeft: 20,
-        marginBottom: 11,
+    },
+    arrow: {
+        color: '#8E8E93',
+        fontSize: 24,
+        fontWeight: 'bold',
     },
     loadingText: {
         color: '#aaa',

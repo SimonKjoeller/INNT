@@ -25,7 +25,7 @@
 - Sortering på genre / kategori # Babski []
 - Evt. tilføj 'Played', hvor man ikke nødvendigvis skal rate. # Simon [x] 01-11-2025
 - Fix logging, så vi kan se hvilke spil der bliver klikket ind på (server) # Simon [x] 29-10-2025
-- "See more" - ift. game kategorier (Home Page) # Babski []
+- "See more" - ift. game kategorier (Home Page) # Babski [x] 04-11-2025
 - Evt. 'Personalized for you' ift. game recommendation # Babski []
 - Fallback for screenshot i stedet for den anden # Simon [x] 29-10-2025
 - Fallback til publishers, hvis der ikke er en developer # Simon [x]29-10-2025
