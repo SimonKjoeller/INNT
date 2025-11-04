@@ -1,19 +1,64 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, Image, TouchableOpacity, ScrollView } from 'react-native';
 import { useAuth } from '../components/Auth';
 import { styles } from '../styles/styles';
+import { db } from '../database/firebase';
+import { ref, query, orderByChild, equalTo, onValue, off } from 'firebase/database';
 
 const logo = require('../assets/icon.png');
 
 export default function ProfileScreen() {
-  const { user, logout } = useAuth(); // Hent bruger + logout funktion
-  const email = user?.email || 'Unknown user'; // Fallback hvis ingen bruger
+  const { user, logout, username } = useAuth(); // Henter user, logout + brugernavn fra context
+  const displayName = username || 'Unknown user';
 
-  // Disse stats skal i fremtiden hentes dynamisk fra brugerdata database
+  const [ratingsCount, setRatingsCount] = useState(0);
+  const [playedCount, setPlayedCount] = useState(0);
+  const [wishlistCount, setWishlistCount] = useState(0);
+
+  // Realtime lyttere: opdater counts så snart data ændres
+  useEffect(() => {
+    const uid = user?.uid;
+    if (!uid) {
+      setRatingsCount(0);
+      setPlayedCount(0);
+      setWishlistCount(0);
+      return;
+    }
+
+    const wishlistRef = ref(db, `users/${uid}/wishlist`);
+    const playedRef = ref(db, `users/${uid}/played`);
+    const ratingsRef = ref(db, 'userRatings');
+    const ratingsQuery = query(ratingsRef, orderByChild('user_id'), equalTo(uid));
+
+    const handleWishlist = (snap) => {
+      const val = snap.exists() ? snap.val() : null;
+      setWishlistCount(val ? Object.keys(val).length : 0);
+    };
+    const handlePlayed = (snap) => {
+      const val = snap.exists() ? snap.val() : null;
+      setPlayedCount(val ? Object.keys(val).length : 0);
+    };
+    const handleRatings = (snap) => {
+      const val = snap.exists() ? snap.val() : null;
+      setRatingsCount(val ? Object.keys(val).length : 0);
+    };
+
+    onValue(wishlistRef, handleWishlist);
+    onValue(playedRef, handlePlayed);
+    onValue(ratingsQuery, handleRatings);
+
+    return () => {
+      off(wishlistRef, 'value', handleWishlist);
+      off(playedRef, 'value', handlePlayed);
+      off(ratingsQuery, 'value', handleRatings);
+    };
+  }, [user?.uid]);
+
+  // Dynamiske stats
   const stats = [
-    { label: 'Ratings', value: 12 },
-    { label: 'Favorites', value: 4 },
-    { label: 'Gamelist', value: 9 },
+    { label: 'Ratings', value: ratingsCount },
+    { label: 'Played', value: playedCount },
+    { label: 'Wishlist', value: wishlistCount },
   ];
 
   return (
@@ -24,7 +69,7 @@ export default function ProfileScreen() {
         <View style={styles.profileHeader}>
           <Image source={logo} style={styles.logo} resizeMode="contain" />
           <Text style={styles.title}>Your Profile</Text>
-          <Text style={styles.userEmail}>{email}</Text>
+          <Text style={styles.userEmail}>{displayName}</Text>
         </View>
 
         {/* Statistik kort i en Listerække */}    
