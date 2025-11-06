@@ -1,3 +1,4 @@
+  // SearchedProfileScreen: Follow/Message button row
 import { StyleSheet } from 'react-native'; // StyleSheet API til performance optimeret styles
 
 export const styles = StyleSheet.create({
@@ -131,9 +132,9 @@ export const styles = StyleSheet.create({
   // Gamer header
   headerGradient: {
     borderRadius: 16,
-    paddingVertical: 16,
+    paddingVertical: 0,
     paddingHorizontal: 12,
-    marginBottom: 16,
+    marginBottom: 8,
   },
   gamerTag: {
     fontSize: 20,
@@ -231,6 +232,7 @@ export const styles = StyleSheet.create({
   actionRow: {
     flexDirection: 'row',
     gap: 12,
+    marginTop: 40,
     marginBottom: 16,
   },
   actionButton: {
