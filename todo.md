@@ -16,7 +16,7 @@
 - Baggrundsbillede formatering (720) # Simon [x] måske done? 29-10-2025
 - Profile Fetch - username ID # Chrille [x]
   - Nice to have: Gamification. Evt. xp-system # Chrille [x]
-- Profile search - follow account, view profile osv. # Babski & Jæger []
+- Profile search - follow account, view profile osv. # Babski & Jæger [] [Jægers del er done]
 - Notifikationer # Chrille [] (laves først når Babski & Jæger har fixet Profile search)
     - The user you're following rated this game []
     - New follower []
