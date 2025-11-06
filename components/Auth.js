@@ -109,10 +109,12 @@ export function AuthProvider({ children }) {
       }
       // Opret bruger i RTDB: map brugernavn -> uid og gem profil både pr. username og pr. uid
       try {
+        // Inkluder eksplicit username_lower for entydig, case-insensitiv søgning
         const profile = {
           uid: cred.user.uid,
           email: cred.user.email,
           username: usernameKey,
+          username_lower: usernameKey, // <-- tilføjet
           displayName: usernameKey,
           createdAt: Date.now(),
           stats: {
@@ -121,11 +123,11 @@ export function AuthProvider({ children }) {
             level: 0,
           },
         };
-        // reservation af brugernavn
+        // reservation af brugernavn (key er allerede lowercase)
         await set(ref(db, `usernames/${usernameKey}`), { uid: cred.user.uid, createdAt: Date.now() });
-        // profil gemt pr. brugernavn
+        // profil gemt pr. brugernavn (inkl. username_lower)
         await set(ref(db, `usersByUsername/${usernameKey}`), profile);
-        // profil gemt pr. uid (kompatibilitet)
+        // profil gemt pr. uid (inkl. username_lower) for kompatibilitet
         await set(ref(db, `users/${cred.user.uid}`), profile);
       } catch (writeErr) {
         console.log('Realtime DB user write failed:', writeErr.message);

@@ -84,6 +84,31 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#cccccc',
   },
+  // Mode toggle container (knapperne øverst)
+  modeToggleContainer: {
+    flexDirection: 'row',
+    marginBottom: 8
+  },
+  modeButton: {
+    padding: 8,
+    backgroundColor: '#eee',
+    borderRadius: 6
+  },
+  modeButtonActive: {
+    backgroundColor: '#6C5CE7'
+  },
+  modeButtonText: {
+    color: '#000'
+  },
+  modeButtonTextActive: {
+    color: '#fff'
+  },
+  // Loading tekst styling
+  loadingText: {
+    color: '#aaa',
+    marginTop: 8,
+    marginLeft: 4
+  },
 });
 
 export default styles;
