@@ -15,6 +15,7 @@ import EditProfileScreen from '../screens/EditProfileScreen';
 import TrendingScreen from '../screens/TrendingScreen';
 import UpcomingScreen from '../screens/UpcomingScreen';
 import RateGameScreen from '../screens/RateGameScreen';
+import SearchedProfileScreen from '../screens/SearchedProfileScreen';
 import LoginScreen from '../screens/LoginScreen';
 import SignupScreen from '../screens/SignupScreen';
 import LevelUpOverlay from '../components/LevelUpOverlay';
@@ -60,6 +61,13 @@ const HomeStack = () => {
           title: 'Rate Game',
         }}
       />
+      <Stack.Screen
+        name="SearchedProfile"
+        component={SearchedProfileScreen}
+        options={{
+          title: 'User Profile',
+        }}
+      />
     </Stack.Navigator>
   );
 };
@@ -101,6 +109,14 @@ const SearchStack = () => {
           title: 'Rate Game',
         }}
       />
+
+      <Stack.Screen
+        name="SearchedProfileScreen"
+        component={SearchedProfileScreen}
+        options={{
+        title: 'User Profile',
+  }}
+/>
     </Stack.Navigator>
   );
 };

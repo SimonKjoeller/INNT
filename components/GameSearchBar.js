@@ -95,14 +95,14 @@ const GameSearchBar = ({ navigation }) => {
     }
   };
 
-  const handleSuggestionPress = (game) => {
-    setSearchText(game.name);
+  const handleSuggestionPress = (item) => {
+    setSearchText(item.name);
     setSuggestions([]);
     if (searchMode === 'profiles') {
-      // Log klik på profil i stedet for navigation
-      console.log(`Clicked on "${game.name}" profile`);
+      // Navigate to SearchedProfileScreen with user data
+      navigation.navigate('SearchedProfileScreen', { user: item });
     } else {
-      navigation.navigate('RateGame', { gameId: game.firebaseKey, fromScreen: 'Search' });
+      navigation.navigate('RateGame', { gameId: item.firebaseKey, fromScreen: 'Search' });
     }
   };
 
