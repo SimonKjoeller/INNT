@@ -1,65 +1,66 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Image } from 'react-native';
-import { ref, get, query, orderByChild, limitToLast } from 'firebase/database';
-import sessionCache from '../caching/sessionCache';
-import listCache from '../caching/listCache';
+import { ref, get } from 'firebase/database';
 import { db } from '../database/firebase';
 import { popularGamesStyles } from '../styles/homeStyles';
+import sessionCache from '../caching/sessionCache';
+import listCache from '../caching/listCache';
 
-const TrendingGames = ({ navigation }) => {
-    const [trendingGames, setTrendingGames] = useState([]);
+const UpcomingGames = ({ navigation }) => {
+    const [upcomingGames, setUpcomingGames] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        fetchTrendingGames();
+        fetchUpcomingGames();
     }, []);
 
-    const fetchTrendingGames = async () => {
+    const fetchUpcomingGames = async () => {
         try {
             const gamesRef = ref(db, 'games');
-            const topGamesQuery = query(
-                gamesRef,
-                orderByChild('reviewCount'),
-                limitToLast(100)
-            );
-            const snapshot = await get(topGamesQuery);
+            const snapshot = await get(gamesRef);
             if (snapshot.exists()) {
                 const gamesArray = [];
+                const today = new Date();
                 snapshot.forEach((childSnapshot) => {
                     const gameData = childSnapshot.val();
-                    const entry = {
-                        firebaseKey: childSnapshot.key,
-                        id: gameData?.id || childSnapshot.key,
-                        ...gameData
-                    };
-                    gamesArray.push(entry);
+                    let releaseDate = null;
+                    if (gameData.first_release_date) {
+                        releaseDate = new Date(gameData.first_release_date);
+                        if (isNaN(releaseDate.getTime())) {
+                            releaseDate = new Date(Number(gameData.first_release_date));
+                        }
+                    }
+                    if (releaseDate && releaseDate > today) {
+                        const entry = {
+                            firebaseKey: childSnapshot.key,
+                            id: gameData?.id || childSnapshot.key,
+                            ...gameData
+                        };
+                        gamesArray.push(entry);
+                    }
                 });
-                gamesArray.reverse();
-                // Fra disse top 100: vælg de 10 nyeste baseret på first_release_date
-                const newest10 = gamesArray
-                    .filter(game => game.first_release_date)
-                    .sort((a, b) => new Date(b.first_release_date) - new Date(a.first_release_date))
-                    .slice(0, 10);
-                // Cache kun de 10 items vi faktisk viser
+                gamesArray.sort((a, b) => new Date(a.first_release_date) - new Date(b.first_release_date));
+                const upcoming10 = gamesArray.slice(0, 10);
                 try {
-                    for (const entry of newest10) {
+                    for (const entry of upcoming10) {
                         const key = entry.firebaseKey;
                         const already = sessionCache.get(key);
                         if (!already) {
-                            const cachedEntry = { ...entry, __cachedFromSource: 'trending' };
+                            const cachedEntry = { ...entry, __cachedFromSource: 'upcoming' };
                             sessionCache.set(key, cachedEntry);
-                            console.log(`[TrendingGames] cached game ${key}`);
                             const evicted = listCache.add(key);
-                            if (evicted) console.log(`[TrendingGames] listCache evicted: ${evicted}`);
                         }
                     }
                 } catch (e) {
-                    console.log('[TrendingGames] cache loop error', e?.message || e);
+                    console.log('[UpcomingGames] cache loop error', e?.message || e);
                 }
-                setTrendingGames(newest10);
+                setUpcomingGames(upcoming10);
+            } else {
+                setUpcomingGames([]);
             }
         } catch (error) {
-            console.error('Error fetching trending games:', error);
+            console.error('Error fetching upcoming games:', error);
+            setUpcomingGames([]);
         } finally {
             setLoading(false);
         }
@@ -72,7 +73,7 @@ const TrendingGames = ({ navigation }) => {
     if (loading) {
         return (
             <View style={popularGamesStyles.container}>
-                <Text style={popularGamesStyles.title}>Trending Games</Text>
+                <Text style={popularGamesStyles.title}>Upcoming Games</Text>
                 <Text style={popularGamesStyles.loadingText}>Loading...</Text>
             </View>
         );
@@ -82,9 +83,9 @@ const TrendingGames = ({ navigation }) => {
         <View style={popularGamesStyles.container}>
             <TouchableOpacity 
                 style={popularGamesStyles.titleContainer}
-                onPress={() => navigation.navigate('Trending')}
+                onPress={() => navigation.navigate('Upcoming')}
             >
-                <Text style={popularGamesStyles.title}>Trending Games</Text>
+                <Text style={popularGamesStyles.title}>Upcoming Games</Text>
                 <Text style={popularGamesStyles.arrow}>›</Text>
             </TouchableOpacity>
             <ScrollView
@@ -92,13 +93,13 @@ const TrendingGames = ({ navigation }) => {
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={popularGamesStyles.scrollContainer}
             >
-                {trendingGames.map((game, index) => (
+                {upcomingGames.map((game, index) => (
                     <TouchableOpacity
                         key={game.id}
                         style={[
                             popularGamesStyles.gameCard,
                             { marginLeft: index === 0 ? 20 : 10 },
-                            { marginRight: index === trendingGames.length - 1 ? 20 : 0 }
+                            { marginRight: index === upcomingGames.length - 1 ? 20 : 0 }
                         ]}
                         onPress={() => handleGamePress(game)}
                     >
@@ -122,4 +123,4 @@ const TrendingGames = ({ navigation }) => {
     );
 };
 
-export default TrendingGames;
+export default UpcomingGames;

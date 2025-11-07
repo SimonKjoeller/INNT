@@ -98,7 +98,7 @@ const PopularGames = ({ navigation }) => {
         <View style={popularGamesStyles.container}>
             <TouchableOpacity 
                 style={popularGamesStyles.titleContainer}
-                onPress={() => navigation.navigate('Trending')}
+                onPress={() => navigation.navigate('Popular')}
             >
                 <Text style={popularGamesStyles.title}>Popular Games</Text>
                 <Text style={popularGamesStyles.arrow}>›</Text>

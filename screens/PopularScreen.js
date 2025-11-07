@@ -1,10 +1,10 @@
 
 import React, { useState, useLayoutEffect } from 'react';
 import navigationStyles from '../styles/navigationStyles';
-import FullTrendingGames from '../components/FullTrendingGames';
+import FullPopularGames from '../components/FullPopularGames';
 import FilterModal from '../components/FilterModal';
 
-const TrendingScreen = ({ navigation }) => {
+const PopularScreen = ({ navigation }) => {
   const [filterVisible, setFilterVisible] = useState(false);
 
   useLayoutEffect(() => {
@@ -19,7 +19,7 @@ const TrendingScreen = ({ navigation }) => {
 
   return (
     <>
-      <FullTrendingGames navigation={navigation} />
+      <FullPopularGames navigation={navigation} />
       <FilterModal visible={filterVisible} onClose={() => setFilterVisible(false)} />
     </>
   );
@@ -28,4 +28,4 @@ const TrendingScreen = ({ navigation }) => {
 import { TouchableOpacity } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 
-export default TrendingScreen;
+export default PopularScreen;

@@ -14,6 +14,12 @@ const SearchScreen = ({ navigation }) => {
           <Text style={styles.browseTitle}>Browse by</Text>
           <TouchableOpacity 
             style={styles.browseOption}
+            onPress={() => navigation.navigate('Popular')}
+          >
+            <Text style={styles.browseText}>Popular Games</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.browseOption}
             onPress={() => navigation.navigate('Trending')}
           >
             <Text style={styles.browseText}>Trending Games</Text>
