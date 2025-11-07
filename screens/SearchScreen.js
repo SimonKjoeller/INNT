@@ -20,15 +20,39 @@ const SearchScreen = ({ navigation }) => {
           </TouchableOpacity>
           <TouchableOpacity 
             style={styles.browseOption}
-            onPress={() => navigation.navigate('Trending')}
+            onPress={() => navigation.navigate('Popular')}
+          >
+            <Text style={styles.browseText}>Popular Games</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.browseOption}
+            onPress={() => navigation.navigate('BrowseBy', { mode: 'trending', limit: 24 })}
           >
             <Text style={styles.browseText}>Trending Games</Text>
           </TouchableOpacity>
           <TouchableOpacity 
             style={styles.browseOption}
-            onPress={() => navigation.navigate('Upcoming')}
+            onPress={() => navigation.navigate('BrowseBy', { mode: 'upcoming', limit: 24 })}
           >
             <Text style={styles.browseText}>Upcoming Games</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.browseOption}
+            onPress={() => navigation.navigate('BrowseBy', { mode: 'genre', genreName: 'Shooter' })}
+          >
+            <Text style={styles.browseText}>Shooter</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.browseOption}
+            onPress={() => navigation.navigate('BrowseBy', { mode: 'genre', genreName: 'Racing' })}
+          >
+            <Text style={styles.browseText}>Racing</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.browseOption}
+            onPress={() => navigation.navigate('BrowseBy', { mode: 'genre', genreName: 'Adventure' })}
+          >
+            <Text style={styles.browseText}>Adventure</Text>
           </TouchableOpacity>
         </View>
 

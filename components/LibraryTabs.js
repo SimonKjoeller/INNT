@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
+import Icon from 'react-native-vector-icons/Ionicons';
 import { libraryStyles } from '../styles/libraryStyles';
 import WantToPlayList from './WantToPlayList';
 import PlayedGamesList from './PlayedGamesList';
@@ -9,6 +10,8 @@ import { useAuth } from './Auth';
 const LibraryTabs = ({ navigation, userId, initialTab }) => {
     const [activeTab, setActiveTab] = useState(initialTab || 'wishlist');
     const { user } = useAuth();
+    const [sortModes, setSortModes] = useState({ wishlist: 'added_desc', played: 'added_desc', rated: 'rated_at_desc' });
+    const [showSortMenu, setShowSortMenu] = useState(false);
     const effectiveUserId = useMemo(() => userId || user?.uid || null, [userId, user]);
 
     const tabs = [
@@ -75,8 +78,58 @@ const LibraryTabs = ({ navigation, userId, initialTab }) => {
             <ActiveComponent
                 navigation={navigation}
                 userId={effectiveUserId}
+                sortMode={sortModes[activeTab]}
             />
         );
+    };
+
+    const setSortForActive = (mode) => {
+        setSortModes(prev => ({ ...prev, [activeTab]: mode }));
+        setShowSortMenu(false);
+    };
+
+    const renderSortMenu = () => {
+        const isWishlistOrPlayed = activeTab === 'wishlist' || activeTab === 'played';
+        const isRated = activeTab === 'rated';
+        if (isWishlistOrPlayed) {
+            const options = [
+                { key: 'added_desc', label: 'Newest' },
+                { key: 'added_asc', label: 'Oldest' },
+            ];
+            return (
+                <View style={libraryStyles.sortMenuContainer}>
+                    {options.map(opt => {
+                        const active = sortModes[activeTab] === opt.key;
+                        return (
+                            <TouchableOpacity key={opt.key} style={[libraryStyles.sortButton, active ? libraryStyles.sortButtonActive : libraryStyles.sortButtonInactive]} onPress={() => setSortForActive(opt.key)} activeOpacity={0.8}>
+                                <Text style={[libraryStyles.sortButtonText, active ? libraryStyles.sortButtonTextActive : libraryStyles.sortButtonTextInactive]}>{opt.label}</Text>
+                            </TouchableOpacity>
+                        );
+                    })}
+                </View>
+            );
+        }
+        if (isRated) {
+            const options = [
+                { key: 'rated_at_desc', label: 'Newest' },
+                { key: 'rated_at_asc', label: 'Oldest' },
+                { key: 'score_desc', label: 'Score ↓' },
+                { key: 'score_asc', label: 'Score ↑' },
+            ];
+            return (
+                <View style={libraryStyles.sortMenuContainer}>
+                    {options.map(opt => {
+                        const active = sortModes[activeTab] === opt.key;
+                        return (
+                            <TouchableOpacity key={opt.key} style={[libraryStyles.sortButton, active ? libraryStyles.sortButtonActive : libraryStyles.sortButtonInactive]} onPress={() => setSortForActive(opt.key)} activeOpacity={0.8}>
+                                <Text style={[libraryStyles.sortButtonText, active ? libraryStyles.sortButtonTextActive : libraryStyles.sortButtonTextInactive]}>{opt.label}</Text>
+                            </TouchableOpacity>
+                        );
+                    })}
+                </View>
+            );
+        }
+        return null;
     };
 
     return (
@@ -93,6 +146,57 @@ const LibraryTabs = ({ navigation, userId, initialTab }) => {
                 ))}
             </View>
 
+            {/* Sort icon/top bar */}
+            <View style={libraryStyles.sortTopBar}>
+                <TouchableOpacity onPress={() => setShowSortMenu(v => !v)} style={libraryStyles.sortIconButton} activeOpacity={0.7}>
+                    <Icon name="swap-vertical" size={18} color="#ccc" />
+                    <Text style={libraryStyles.sortCurrentText}>
+                        {(() => {
+                            const k = sortModes[activeTab];
+                            const map = {
+                                added_desc: 'Newest', added_asc: 'Oldest',
+                                rated_at_desc: 'Newest', rated_at_asc: 'Oldest',
+                                score_desc: 'Score ↓', score_asc: 'Score ↑'
+                            };
+                            return map[k] || 'Sort';
+                        })()}
+                    </Text>
+                </TouchableOpacity>
+                {showSortMenu && (
+                    <View style={libraryStyles.sortMenuDropdown}>
+                        {(() => {
+                            const isWishlistOrPlayed = activeTab === 'wishlist' || activeTab === 'played';
+                            const isRated = activeTab === 'rated';
+                            const options = isWishlistOrPlayed
+                                ? [
+                                    { key: 'added_desc', label: 'Newest' },
+                                    { key: 'added_asc', label: 'Oldest' },
+                                ]
+                                : [
+                                    { key: 'rated_at_desc', label: 'Newest' },
+                                    { key: 'rated_at_asc', label: 'Oldest' },
+                                    { key: 'score_desc', label: 'Score ↓' },
+                                    { key: 'score_asc', label: 'Score ↑' },
+                                ];
+                            return options.map(opt => {
+                                const active = sortModes[activeTab] === opt.key;
+                                return (
+                                    <TouchableOpacity
+                                        key={opt.key}
+                                        style={[libraryStyles.sortMenuItem, active ? libraryStyles.sortMenuItemActive : libraryStyles.sortMenuItemInactive]}
+                                        onPress={() => setSortForActive(opt.key)}
+                                        activeOpacity={0.85}
+                                    >
+                                        <Text style={[libraryStyles.sortMenuItemText, active ? libraryStyles.sortMenuItemTextActive : libraryStyles.sortMenuItemTextInactive]}>
+                                            {opt.label}
+                                        </Text>
+                                    </TouchableOpacity>
+                                );
+                            });
+                        })()}
+                    </View>
+                )}
+            </View>
             {/* Tab Content */}
             {renderActiveContent()}
         </View>

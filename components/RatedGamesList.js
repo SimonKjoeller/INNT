@@ -8,7 +8,7 @@ import GameListItem from './GameListItem';
 import { useAuth } from './Auth';
 import { useFocusEffect } from '@react-navigation/native';
 
-const RatedGamesList = ({ navigation, userId }) => {
+const RatedGamesList = ({ navigation, userId, sortMode = 'rated_at_desc' }) => {
     const [ratedGames, setRatedGames] = useState([]);
     const [loading, setLoading] = useState(true);
     const { user } = useAuth();
@@ -18,6 +18,25 @@ const RatedGamesList = ({ navigation, userId }) => {
         fetchRatedGames();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [effectiveUserId]);
+
+    useEffect(() => {
+        setRatedGames(prev => {
+            const copy = [...prev];
+            copy.sort((a, b) => {
+                if (sortMode === 'rated_at_asc' || sortMode === 'rated_at_desc') {
+                    const diff = new Date(a.timestamp) - new Date(b.timestamp);
+                    return sortMode === 'rated_at_asc' ? diff : -diff;
+                }
+                if (sortMode === 'score_asc' || sortMode === 'score_desc') {
+                    const diff = (Number(a.rating) || 0) - (Number(b.rating) || 0);
+                    return sortMode === 'score_asc' ? diff : -diff;
+                }
+                return new Date(b.timestamp) - new Date(a.timestamp);
+            });
+            return copy;
+        });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [sortMode]);
 
     // Refetch when Library screen gains focus
     useFocusEffect(
@@ -87,10 +106,18 @@ const RatedGamesList = ({ navigation, userId }) => {
                     };
                 }).filter(item => item !== null);
 
-                // Sorter efter timestamp (nyeste først)
-                enrichedRatings.sort((a, b) =>
-                    new Date(b.timestamp) - new Date(a.timestamp)
-                );
+                // Sorter efter valgt mode
+                enrichedRatings.sort((a, b) => {
+                    if (sortMode === 'rated_at_asc' || sortMode === 'rated_at_desc') {
+                        const diff = new Date(a.timestamp) - new Date(b.timestamp);
+                        return sortMode === 'rated_at_asc' ? diff : -diff;
+                    }
+                    if (sortMode === 'score_asc' || sortMode === 'score_desc') {
+                        const diff = (Number(a.rating) || 0) - (Number(b.rating) || 0);
+                        return sortMode === 'score_asc' ? diff : -diff;
+                    }
+                    return new Date(b.timestamp) - new Date(a.timestamp);
+                });
 
                 setRatedGames(enrichedRatings);
             } else {

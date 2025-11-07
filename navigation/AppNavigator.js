@@ -12,8 +12,7 @@ import SearchScreen from '../screens/SearchScreen';
 import LibraryScreen from '../screens/LibraryScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import EditProfileScreen from '../screens/EditProfileScreen';
-import TrendingScreen from '../screens/TrendingScreen';
-import UpcomingScreen from '../screens/UpcomingScreen';
+import BrowseByScreen from '../screens/BrowseByScreen';
 import RateGameScreen from '../screens/RateGameScreen';
 import SearchedProfileScreen from '../screens/SearchedProfileScreen';
 import LoginScreen from '../screens/LoginScreen';
@@ -52,7 +51,8 @@ const HomeStack = () => {
       />
       <Stack.Screen
         name="Trending"
-        component={TrendingScreen}
+        component={BrowseByScreen}
+        initialParams={{ mode: 'trending', limit: 24 }}
         options={{
           title: 'Trending',
           headerRight: () => (
@@ -61,8 +61,16 @@ const HomeStack = () => {
         }}
       />
       <Stack.Screen
+        name="BrowseBy"
+        component={BrowseByScreen}
+        options={{
+          title: 'Browse',
+        }}
+      />
+      <Stack.Screen
         name="Upcoming"
-        component={UpcomingScreen}
+        component={BrowseByScreen}
+        initialParams={{ mode: 'upcoming', limit: 24 }}
         options={{
           title: 'Upcoming',
           headerRight: () => (
@@ -116,7 +124,8 @@ const SearchStack = () => {
       />
       <Stack.Screen
         name="Trending"
-        component={TrendingScreen}
+        component={BrowseByScreen}
+        initialParams={{ mode: 'trending', limit: 24 }}
         options={{
           title: 'Trending',
           headerRight: () => (
@@ -125,8 +134,16 @@ const SearchStack = () => {
         }}
       />
       <Stack.Screen
+        name="BrowseBy"
+        component={BrowseByScreen}
+        options={{
+          title: 'Browse',
+        }}
+      />
+      <Stack.Screen
         name="Upcoming"
-        component={UpcomingScreen}
+        component={BrowseByScreen}
+        initialParams={{ mode: 'upcoming', limit: 24 }}
         options={{
           title: 'Upcoming',
           headerRight: () => (
@@ -146,9 +163,9 @@ const SearchStack = () => {
         name="SearchedProfileScreen"
         component={SearchedProfileScreen}
         options={{
-        title: 'User Profile',
-  }}
-/>
+          title: 'User Profile',
+        }}
+      />
     </Stack.Navigator>
   );
 };
