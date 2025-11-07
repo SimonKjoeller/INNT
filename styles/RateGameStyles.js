@@ -107,7 +107,7 @@ export const rateGameStyles = StyleSheet.create({
         flexDirection: 'row',
         paddingHorizontal: SPACING.lg,
         paddingTop: SPACING.lg,
-        marginBottom: SPACING.lg,
+        marginBottom: SPACING.md,
     },
     gameInfoContainer: {
         ...baseStyles.gameInfoBase,
@@ -173,13 +173,13 @@ export const rateGameStyles = StyleSheet.create({
     },
     fullSummaryContainer: {
         paddingHorizontal: SPACING.lg,
-        marginTop: SPACING.sm,
+        marginTop: SPACING.xs,
         marginBottom: SPACING.lg,
     },
     collapsedSummaryContainer: {
         position: 'relative',
         paddingHorizontal: SPACING.lg,
-        marginTop: SPACING.sm,
+        marginTop: SPACING.xs,
         marginBottom: SPACING.lg,
         overflow: 'hidden',
     },
@@ -197,6 +197,20 @@ export const rateGameStyles = StyleSheet.create({
         // Simple fade hint without extra deps: solid overlay with high opacity near bottom
         // Gives a subtle indication there is more content
         backgroundColor: 'rgba(26,26,26,0.9)',
+    },
+    summaryToggleButton: {
+        alignSelf: 'flex-end',
+        marginRight: SPACING.lg,
+        marginTop: -8,
+        marginBottom: SPACING.md,
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        backgroundColor: 'transparent',
+    },
+    summaryToggleText: {
+        color: '#6C5CE7',
+        fontWeight: 'bold',
+        fontSize: 12,
     },
     // Action Buttons Section  
     actionButtonsContainer: {

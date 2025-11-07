@@ -753,6 +753,18 @@ export const RateGameDetail = ({ gameId, navigation }) => {
                     </TouchableOpacity>
                 )}
 
+            {!isSummaryExpanded && (
+                <TouchableOpacity
+                    onPress={() => setIsSummaryExpanded(true)}
+                    activeOpacity={0.8}
+                    style={rateGameStyles.summaryToggleButton}
+                    accessibilityRole="button"
+                    accessibilityLabel="Show more description"
+                >
+                    <Text style={rateGameStyles.summaryToggleText}>Show more</Text>
+                </TouchableOpacity>
+            )}
+
                 {/* Summary full-width (expanded) — fylder resten af skærmen under billedet */}
                 {isSummaryExpanded && (
                     <TouchableOpacity
@@ -767,6 +779,18 @@ export const RateGameDetail = ({ gameId, navigation }) => {
                         </Text>
                     </TouchableOpacity>
                 )}
+
+            {isSummaryExpanded && (
+                <TouchableOpacity
+                    onPress={() => setIsSummaryExpanded(false)}
+                    activeOpacity={0.8}
+                    style={rateGameStyles.summaryToggleButton}
+                    accessibilityRole="button"
+                    accessibilityLabel="Show less description"
+                >
+                    <Text style={rateGameStyles.summaryToggleText}>Show less</Text>
+                </TouchableOpacity>
+            )}
 
                 {/* Action Buttons */}
                 <View style={rateGameStyles.actionButtonsContainer}>

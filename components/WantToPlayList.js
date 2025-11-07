@@ -8,7 +8,7 @@ import GameListItem from './GameListItem';
 import { useAuth } from './Auth';
 import { useFocusEffect } from '@react-navigation/native';
 
-const WantToPlayList = ({ navigation, userId }) => {
+const WantToPlayList = ({ navigation, userId, sortMode = 'added_desc' }) => {
     const [wishlistGames, setWishlistGames] = useState([]);
     const [loading, setLoading] = useState(true);
     const { user } = useAuth();
@@ -18,6 +18,19 @@ const WantToPlayList = ({ navigation, userId }) => {
         fetchWishlist();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [effectiveUserId]);
+
+    // Re-sort when sortMode changes
+    useEffect(() => {
+        setWishlistGames(prev => {
+            const copy = [...prev];
+            copy.sort((a, b) => {
+                const diff = new Date(a.added_timestamp) - new Date(b.added_timestamp);
+                return sortMode === 'added_asc' ? diff : -diff;
+            });
+            return copy;
+        });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [sortMode]);
 
     // Refetch when Library screen gains focus (e.g., user taps bottom tab or returns from game)
     useFocusEffect(
@@ -86,10 +99,11 @@ const WantToPlayList = ({ navigation, userId }) => {
                     };
                 }).filter(item => item !== null);
 
-                // Sorter efter added_timestamp (nyeste først)
-                enrichedWishlist.sort((a, b) =>
-                    new Date(b.added_timestamp) - new Date(a.added_timestamp)
-                );
+                // Sorter efter added_timestamp
+                enrichedWishlist.sort((a, b) => {
+                    const diff = new Date(a.added_timestamp) - new Date(b.added_timestamp);
+                    return sortMode === 'added_asc' ? diff : -diff;
+                });
 
                 setWishlistGames(enrichedWishlist);
             } else {

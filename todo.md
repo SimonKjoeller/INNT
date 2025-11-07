@@ -28,8 +28,9 @@
 - "See more" - ift. game kategorier (Home Page) # Babski [x] 04-11-2025
 - Evt. 'Personalized for you' ift. game recommendation # Babski []
 - Fallback for screenshot i stedet for den anden # Simon [x] 29-10-2025
-- Fallback til publishers, hvis der ikke er en developer # Simon [x]29-10-2025
+- Fallback til publishers, hvis der ikke er en developer # Simon [x] 29-10-2025
 - See more (inde på spil screen, så beskrivelsen ikke er for lang) # Simon [x] 29-10-2025
 - Vote andres ratings og se kommentarer inde på spil # Simon [x] 01-11-2025 
-
+- Tilføj flere kategoriseringer på homescreen, samt at loading af kategori sker med gradvist # Simon [x] 07-11-2025
+- Tilføj sortering under library # Simon [x] 07-11-2025
 ````
