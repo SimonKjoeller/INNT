@@ -12,6 +12,15 @@ const GameSearchBar = ({ navigation }) => {
   // Ny: søge-mode: "games" eller "profiles"
   const [searchMode, setSearchMode] = useState('games');
 
+  // Når brugeren skifter mode (games <-> profiles), udløs en søgning med nuværende input
+  useEffect(() => {
+    const current = (searchText || '').trim();
+    if (current.length === 0) return;
+    // Kald fetchSuggestions direkte så resultaterne opdateres til den nye mode
+    fetchSuggestions(current.toLowerCase());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchMode]);
+
   // NOTE:
   // - For games: hver spil-post bør have name_lower og rules skal indeholde ".indexOn": ["name_lower"].
   // - For profiles: hver user-post bør have username_lower og rules skal indeholde ".indexOn": ["username_lower"].
@@ -150,7 +159,8 @@ const GameSearchBar = ({ navigation }) => {
       )}
       {/* Suggestions dropdown */}
       {!loading && searchText.length > 0 && suggestions.length > 0 && (
-        <View style={styles.suggestionsContainer}>
+        // Tilføj marginTop så dropdown ikke dækker søgefeltet
+        <View style={[styles.suggestionsContainer, { marginTop: 32, zIndex: 10 }]}>
           {suggestions.map((game) => (
             <TouchableOpacity
               key={game.id}
