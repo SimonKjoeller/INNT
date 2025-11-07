@@ -57,6 +57,91 @@ export const libraryStyles = StyleSheet.create({
         marginTop: 20,
     },
 
+    // Sort Bar
+    sortTopBar: {
+        flexDirection: 'row',
+        justifyContent: 'flex-end',
+        paddingHorizontal: 20,
+        marginTop: 8,
+        position: 'relative',
+    },
+    sortIconButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+        backgroundColor: '#242424',
+        borderRadius: 10,
+        paddingHorizontal: 10,
+        paddingVertical: 6,
+        borderWidth: 1,
+        borderColor: '#333',
+    },
+    sortCurrentText: {
+        color: '#bbb',
+        fontSize: 12,
+        fontWeight: '700',
+    },
+    sortMenuDropdown: {
+        position: 'absolute',
+        top: 36,
+        right: 20,
+        backgroundColor: '#232323',
+        borderRadius: 10,
+        borderWidth: 1,
+        borderColor: '#3a3a3a',
+        paddingVertical: 6,
+        width: 160,
+        zIndex: 1000,
+        elevation: 10,
+        shadowColor: '#000',
+        shadowOpacity: 0.3,
+        shadowRadius: 6,
+        shadowOffset: { width: 0, height: 2 },
+    },
+    sortMenuItem: {
+        paddingVertical: 8,
+        paddingHorizontal: 12,
+        borderBottomWidth: 1,
+        borderBottomColor: '#333',
+    },
+    sortMenuItemActive: {
+        backgroundColor: '#2c2c2c',
+    },
+    sortMenuItemInactive: {
+        backgroundColor: 'transparent',
+    },
+    sortMenuItemText: {
+        fontSize: 13,
+        fontWeight: '700',
+    },
+    sortMenuItemTextActive: { color: '#ffffff' },
+    sortMenuItemTextInactive: { color: '#bbbbbb' },
+    sortButton: {
+        flex: 1,
+        alignItems: 'center',
+        paddingVertical: 8,
+        borderRadius: 10,
+        borderWidth: 1,
+    },
+    sortButtonActive: {
+        backgroundColor: '#3a2fe2',
+        borderColor: '#6C5CE7',
+    },
+    sortButtonInactive: {
+        backgroundColor: '#2a2a2a',
+        borderColor: '#3a3a3a',
+    },
+    sortButtonText: {
+        fontSize: 12,
+        fontWeight: '700',
+    },
+    sortButtonTextActive: {
+        color: '#fff',
+    },
+    sortButtonTextInactive: {
+        color: '#bbb',
+    },
+
     // Game List Styles
     gamesList: {
         paddingHorizontal: 20,

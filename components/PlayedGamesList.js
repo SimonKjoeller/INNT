@@ -8,7 +8,7 @@ import GameListItem from './GameListItem';
 import { useAuth } from './Auth';
 import { useFocusEffect } from '@react-navigation/native';
 
-const PlayedGamesList = ({ navigation, userId }) => {
+const PlayedGamesList = ({ navigation, userId, sortMode = 'added_desc' }) => {
     const [playedGames, setPlayedGames] = useState([]);
     const [loading, setLoading] = useState(true);
     const { user } = useAuth();
@@ -18,6 +18,18 @@ const PlayedGamesList = ({ navigation, userId }) => {
         fetchPlayed();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [effectiveUserId]);
+
+    useEffect(() => {
+        setPlayedGames(prev => {
+            const copy = [...prev];
+            copy.sort((a, b) => {
+                const diff = new Date(a.added_timestamp) - new Date(b.added_timestamp);
+                return sortMode === 'added_asc' ? diff : -diff;
+            });
+            return copy;
+        });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [sortMode]);
 
     // Refetch when Library screen gains focus
     useFocusEffect(
@@ -86,10 +98,11 @@ const PlayedGamesList = ({ navigation, userId }) => {
                     };
                 }).filter(item => item !== null);
 
-                // Sorter efter added_timestamp (nyeste først)
-                enrichedPlayed.sort((a, b) =>
-                    new Date(b.added_timestamp) - new Date(a.added_timestamp)
-                );
+                // Sorter efter added_timestamp
+                enrichedPlayed.sort((a, b) => {
+                    const diff = new Date(a.added_timestamp) - new Date(b.added_timestamp);
+                    return sortMode === 'added_asc' ? diff : -diff;
+                });
 
                 setPlayedGames(enrichedPlayed);
             } else {
