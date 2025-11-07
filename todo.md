@@ -16,13 +16,13 @@
 - Baggrundsbillede formatering (720) # Simon [x] måske done? 29-10-2025
 - Profile Fetch - username ID # Chrille [x]
   - Nice to have: Gamification. Evt. xp-system # Chrille [x]
-- Profile search - follow account, view profile osv. # Babski & Jæger [] [Jægers del er done]
+- Profile search - follow account, view profile osv. # Babski & Jæger [x] [Jægers del er done] (Der er flere follow interaktioner der kan laves)
 - Notifikationer # Chrille [] (laves først når Babski & Jæger har fixet Profile search)
     - The user you're following rated this game []
     - New follower []
     - Evt. New recommended []
     - Upcoming games []
-- Sortering på genre / kategori # Babski []
+- Sortering på genre / kategori # Babski [x] (kan godt tilføjes flere sorteringsmuligheder)
 - Evt. tilføj 'Played', hvor man ikke nødvendigvis skal rate. # Simon [x] 01-11-2025
 - Fix logging, så vi kan se hvilke spil der bliver klikket ind på (server) # Simon [x] 29-10-2025
 - "See more" - ift. game kategorier (Home Page) # Babski [x] 04-11-2025

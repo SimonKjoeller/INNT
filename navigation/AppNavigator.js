@@ -40,11 +40,24 @@ const HomeStack = () => {
         }}
       />
       <Stack.Screen
+        name="Popular"
+        component={require('../screens/PopularScreen').default}
+        options={{
+          title: 'Popular',
+          headerRight: () => (
+            <Icon name="options-outline" size={26} color={navigationStyles.headerTintColor} style={{ marginRight: 16 }} />
+          ),
+        }}
+      />
+      <Stack.Screen
         name="Trending"
         component={BrowseByScreen}
         initialParams={{ mode: 'trending', limit: 24 }}
         options={{
           title: 'Trending',
+          headerRight: () => (
+            <Icon name="options-outline" size={26} color={navigationStyles.headerTintColor} style={{ marginRight: 16 }} />
+          ),
         }}
       />
       <Stack.Screen
@@ -60,6 +73,9 @@ const HomeStack = () => {
         initialParams={{ mode: 'upcoming', limit: 24 }}
         options={{
           title: 'Upcoming',
+          headerRight: () => (
+            <Icon name="options-outline" size={26} color={navigationStyles.headerTintColor} style={{ marginRight: 16 }} />
+          ),
         }}
       />
       <Stack.Screen
@@ -97,11 +113,24 @@ const SearchStack = () => {
         }}
       />
       <Stack.Screen
+        name="Popular"
+        component={require('../screens/PopularScreen').default}
+        options={{
+          title: 'Popular',
+          headerRight: () => (
+            <Icon name="options-outline" size={26} color={navigationStyles.headerTintColor} style={{ marginRight: 16 }} />
+          ),
+        }}
+      />
+      <Stack.Screen
         name="Trending"
         component={BrowseByScreen}
         initialParams={{ mode: 'trending', limit: 24 }}
         options={{
           title: 'Trending',
+          headerRight: () => (
+            <Icon name="options-outline" size={26} color={navigationStyles.headerTintColor} style={{ marginRight: 16 }} />
+          ),
         }}
       />
       <Stack.Screen
@@ -117,6 +146,9 @@ const SearchStack = () => {
         initialParams={{ mode: 'upcoming', limit: 24 }}
         options={{
           title: 'Upcoming',
+          headerRight: () => (
+            <Icon name="options-outline" size={26} color={navigationStyles.headerTintColor} style={{ marginRight: 16 }} />
+          ),
         }}
       />
       <Stack.Screen
