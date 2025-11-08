@@ -1,140 +1,82 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image } from 'react-native';
-import { ref, get } from 'firebase/database';
-import { db } from '../database/firebase';
-import styles from '../styles/trendingScreenStyles';
-import globalStyles from '../styles/globalStyles';
-import sessionCache from '../caching/sessionCache';
-import listCache from '../caching/listCache';
+import React, { useEffect, useState } from 'react';
+import { View, FlatList, ActivityIndicator, Text, TouchableOpacity } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { getUpcomingGames } from '../caching/listCache';
+import GameListItem from './GameListItem';
+import browseByStyles from '../styles/browseByStyles';
 
-const UpcomingGames = ({ navigation }) => {
-    const [upcomingGames, setUpcomingGames] = useState([]);
+const UpcomingGames = (props) => {
+    const navigation = props.navigation || useNavigation();
+    const [games, setGames] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
     useEffect(() => {
-        let isMounted = true;
-        (async () => {
+        const fetchUpcomingGames = async () => {
             try {
-                const gamesRef = ref(db, 'games');
-                const snapshot = await get(gamesRef);
-                if (snapshot.exists()) {
-                    const gamesArray = [];
-                    const today = new Date();
-                    snapshot.forEach((childSnapshot) => {
-                        const gameData = childSnapshot.val();
-                        let releaseDate = null;
-                        if (gameData.first_release_date) {
-                            releaseDate = new Date(gameData.first_release_date);
-                            if (isNaN(releaseDate.getTime())) {
-                                releaseDate = new Date(Number(gameData.first_release_date));
-                            }
-                        }
-                        if (releaseDate && releaseDate > today) {
-                            const entry = {
-                                firebaseKey: childSnapshot.key,
-                                id: gameData?.id || childSnapshot.key,
-                                ...gameData
-                            };
-                            gamesArray.push(entry);
-                        }
-                    });
-                    gamesArray.sort((a, b) => new Date(a.first_release_date) - new Date(b.first_release_date));
-                    const upcoming32 = gamesArray.slice(0, 32);
-                    try {
-                        for (const entry of upcoming32) {
-                            const key = entry.firebaseKey;
-                            const already = sessionCache.get(key);
-                            if (!already) {
-                                const cachedEntry = { ...entry, __cachedFromSource: 'upcoming' };
-                                sessionCache.set(key, cachedEntry);
-                                const evicted = listCache.add(key);
-                            }
-                        }
-                    } catch (e) {
-                        // cache error
-                    }
-                    if (isMounted) setUpcomingGames(upcoming32);
-                } else {
-                    if (isMounted) setUpcomingGames([]);
-                }
-            } catch (error) {
-                if (isMounted) setUpcomingGames([]);
+                const today = Math.floor(Date.now() / 1000); // Unix timestamp in seconds
+                const allGames = await getUpcomingGames();
+                const upcoming = allGames.filter(
+                    (game) => game.first_release_date && game.first_release_date > today
+                );
+                setGames(upcoming);
+            } catch (err) {
+                setError('Failed to load upcoming games.');
             } finally {
-                if (isMounted) setLoading(false);
+                setLoading(false);
             }
-        })();
-        return () => { isMounted = false; };
+        };
+        fetchUpcomingGames();
     }, []);
 
     const handleGamePress = (game) => {
-        navigation.navigate('RateGame', { gameId: game.firebaseKey });
+        navigation.navigate('RateGame', { gameId: game.id || game.firebaseKey });
     };
 
     if (loading) {
         return (
-            <View style={globalStyles.container}>
-                <Text style={styles.headerTitle}>Upcoming Games</Text>
-                <Text style={styles.headerSubtitle}>Loading...</Text>
+            <View style={browseByStyles.container}>
+                <ActivityIndicator size="large" color="#888" />
             </View>
         );
     }
 
-    if (!upcomingGames.length) {
+    if (error) {
         return (
-            <View style={globalStyles.container}>
-                <Text style={styles.headerTitle}>Upcoming Games</Text>
-                <Text style={styles.headerSubtitle}>No upcoming games found.</Text>
+            <View style={browseByStyles.container}>
+                <Text>{error}</Text>
             </View>
         );
     }
 
-    // Normalize image field for compatibility
-    const normalizedGames = upcomingGames.map(g => {
-        const imageCandidate = g.coverUrl || g.image || null;
-        return { ...g, image: imageCandidate };
-    });
-
-    // Group games into rows of 4
-    const gameRows = [];
-    for (let i = 0; i < normalizedGames.length; i += 4) {
-        gameRows.push(normalizedGames.slice(i, i + 4));
+    if (!games.length) {
+        return (
+            <View style={browseByStyles.container}>
+                <Text>No upcoming games found.</Text>
+            </View>
+        );
     }
 
-    const renderGameCard = (game) => {
-        let imageSource = null;
-        if (typeof game.image === 'number') {
-            imageSource = game.image;
-        } else if (typeof game.image === 'string' && game.image.length > 0) {
-            imageSource = { uri: game.image };
-        }
-        return (
-            <TouchableOpacity key={game.id} style={styles.gameCard} onPress={() => handleGamePress(game)}>
-                {imageSource ? (
-                    <Image source={imageSource} style={styles.gameImage} />
-                ) : (
-                    <View style={[styles.gameImage, { backgroundColor: '#cccccc' }]} />
-                )}
-                <View style={styles.gameInfo} />
-            </TouchableOpacity>
-        );
-    };
-
-    const renderRow = (games, rowIndex) => (
-        <View key={rowIndex} style={styles.row}>
-            {games.map(game => renderGameCard(game))}
-        </View>
+    const renderItem = ({ item }) => (
+        <TouchableOpacity
+            style={browseByStyles.gameCard}
+            onPress={() => handleGamePress(item)}
+            activeOpacity={0.8}
+        >
+            <GameListItem game={item} />
+        </TouchableOpacity>
     );
 
     return (
-        <View style={[globalStyles.container, styles.customBackground]}>
-            <ScrollView
-                style={[globalStyles.scrollView, styles.scrollView]}
-                showsVerticalScrollIndicator={false}
-                contentContainerStyle={[globalStyles.scrollContent, styles.scrollContent]}
-            >
-                {gameRows.map((row, index) => renderRow(row, index))}
-            </ScrollView>
-        </View>
+        <FlatList
+            data={games}
+            keyExtractor={(item) => (item.id ? item.id.toString() : String(item.firebaseKey))}
+            numColumns={4}
+            renderItem={renderItem}
+            columnWrapperStyle={browseByStyles.gridRow}
+            contentContainerStyle={browseByStyles.scrollContent}
+            style={browseByStyles.scrollView}
+        />
     );
 };
 

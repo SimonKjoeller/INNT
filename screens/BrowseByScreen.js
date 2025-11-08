@@ -1,5 +1,8 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useLayoutEffect } from 'react';
 import { View, Image, TouchableOpacity, FlatList, ActivityIndicator } from 'react-native';
+import Icon from 'react-native-vector-icons/Ionicons';
+import navigationStyles from '../styles/navigationStyles';
+import FilterModal from '../components/FilterModal';
 import styles from '../styles/browseByStyles';
 import globalStyles from '../styles/globalStyles';
 import { ref, get, query, orderByChild, limitToLast } from 'firebase/database';
@@ -20,21 +23,40 @@ const normalizeGenres = (genres) => {
   }
 };
 
+
 const BrowseByScreen = ({ route, navigation }) => {
   const { mode = 'genre', genreName, limit = 24 } = route.params || {};
   const genreKey = useMemo(() => (genreName || '').toLowerCase(), [genreName]);
   const [games, setGames] = useState([]);
   const [targetCount, setTargetCount] = useState(limit || 24);
   const [isFetching, setIsFetching] = useState(false);
+  const [filterVisible, setFilterVisible] = useState(false);
+  const [filterSort, setFilterSort] = useState(null); // 'Newest' | 'Oldest' | null
+  const [filterGenre, setFilterGenre] = useState(null); // e.g. 'Adventure', 'Shooter', etc.
 
-  useEffect(() => {
-    navigation.setOptions({ title: genreName || 'Browse' });
-  }, [genreName, navigation]);
+  useLayoutEffect(() => {
+    // Always use genreName if present, otherwise fallback to mode or 'Browse'
+    let navTitle = genreName || 'Browse';
+    if (!genreName) {
+      if (mode === 'popular') navTitle = 'Popular';
+      else if (mode === 'trending') navTitle = 'Trending';
+      else if (mode === 'upcoming') navTitle = 'Upcoming';
+    }
+    navigation.setOptions({
+      title: navTitle,
+      headerRight: () => (
+        <TouchableOpacity onPress={() => setFilterVisible(true)}>
+          <Icon name="options-outline" size={26} color={navigationStyles.headerTintColor} style={{ marginRight: 16 }} />
+        </TouchableOpacity>
+      ),
+    });
+  }, [navigation, genreName, mode]);
+
 
   useEffect(() => {
     fetchData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mode, genreKey, targetCount]);
+  }, [mode, genreKey, targetCount, filterSort, filterGenre]);
 
   const fetchData = async () => {
     try {
@@ -53,13 +75,33 @@ const BrowseByScreen = ({ route, navigation }) => {
             arr.push({ firebaseKey: child.key, id: g?.id || child.key, ...g });
           });
           arr.reverse();
-          if (mode === 'genre' && genreKey) {
-            collected = arr.filter(g => normalizeGenres(g.genres || g.genre || g.categories).includes(genreKey));
+          // Apply genre filter (from modal or route)
+          let genreToUse = filterGenre || (mode === 'genre' ? genreKey : null);
+          if (genreToUse) {
+            collected = arr.filter(g => normalizeGenres(g.genres || g.genre || g.categories).includes(genreToUse.toLowerCase()));
           } else if (mode === 'upcoming') {
             const now = new Date();
             collected = arr.filter(g => g.first_release_date && new Date(g.first_release_date) > now);
+          } else if (mode === 'popular') {
+            collected = arr;
+          } else if (mode === 'trending') {
+            collected = arr;
           } else {
             collected = arr;
+          }
+          // Apply sort (from modal)
+          if (filterSort === 'Oldest') {
+            collected = [...collected].sort((a, b) => {
+              const aDate = a.first_release_date ? new Date(a.first_release_date) : 0;
+              const bDate = b.first_release_date ? new Date(b.first_release_date) : 0;
+              return aDate - bDate;
+            });
+          } else if (filterSort === 'Newest') {
+            collected = [...collected].sort((a, b) => {
+              const aDate = a.first_release_date ? new Date(a.first_release_date) : 0;
+              const bDate = b.first_release_date ? new Date(b.first_release_date) : 0;
+              return bDate - aDate;
+            });
           }
           if (collected.length >= needed || limitToTry >= 2000) break;
           limitToTry = Math.min(limitToTry * 2, 2000);
@@ -90,7 +132,7 @@ const BrowseByScreen = ({ route, navigation }) => {
         {imageSource ? (
           <Image source={imageSource} style={styles.gameImage} />
         ) : (
-          <View style={[styles.gameImage, { backgroundColor: '#cccccc' }]} />
+          <View style={styles.gameImagePlaceholder} />
         )}
         <View style={styles.gameInfo} />
       </TouchableOpacity>
@@ -101,24 +143,36 @@ const BrowseByScreen = ({ route, navigation }) => {
   for (let i = 0; i < games.length; i += 4) rows.push(games.slice(i, i + 4));
 
   return (
-    <View style={[globalStyles.container, styles.customBackground]}>
-      <FlatList
-        data={games}
-        keyExtractor={(item) => String(item.id)}
-        numColumns={4}
-        renderItem={({ item }) => renderCard(item)}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={[globalStyles.scrollContent, styles.scrollContent]}
-        columnWrapperStyle={{ justifyContent: 'space-between', paddingHorizontal: 20, marginBottom: 18 }}
-        onEndReachedThreshold={0.4}
-        onEndReached={handleEndReached}
-        ListFooterComponent={isFetching ? (
-          <View style={{ paddingVertical: 16 }}>
-            <ActivityIndicator size="small" color="#aaa" />
-          </View>
-        ) : null}
+    <>
+      <View style={[globalStyles.container, styles.customBackground]}>
+        <FlatList
+          data={games}
+          keyExtractor={(item) => String(item.id)}
+          numColumns={4}
+          renderItem={({ item }) => renderCard(item)}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={[globalStyles.scrollContent, styles.scrollContent]}
+          columnWrapperStyle={styles.columnWrapper}
+          onEndReachedThreshold={0.4}
+          onEndReached={handleEndReached}
+          ListFooterComponent={isFetching ? (
+            <View style={styles.footerLoading}>
+              <ActivityIndicator size="small" color="#aaa" />
+            </View>
+          ) : null}
+        />
+      </View>
+      <FilterModal
+        visible={filterVisible}
+        onClose={() => setFilterVisible(false)}
+        onApply={({ release, genre }) => {
+          setFilterSort(release);
+          setFilterGenre(genre);
+        }}
+        initialRelease={filterSort}
+        initialGenre={filterGenre}
       />
-    </View>
+    </>
   );
 };
 

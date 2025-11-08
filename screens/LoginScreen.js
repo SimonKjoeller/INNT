@@ -84,7 +84,7 @@ export default function LoginScreen({ navigation }) {
         </View>
 
         {error ? (
-          <Text style={{ color: '#ff6b6b', marginTop: 8, textAlign: 'center', fontSize: 12 }}>{error}</Text>
+          <Text style={styles.errorText}>{error}</Text>
         ) : null}
         
         {/* Link til signup skærm */}

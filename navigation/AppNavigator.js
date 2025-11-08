@@ -41,7 +41,8 @@ const HomeStack = () => {
       />
       <Stack.Screen
         name="Popular"
-        component={require('../screens/PopularScreen').default}
+        component={BrowseByScreen}
+        initialParams={{ mode: 'popular', limit: 24 }}
         options={{
           title: 'Popular',
           headerRight: () => (
@@ -114,7 +115,8 @@ const SearchStack = () => {
       />
       <Stack.Screen
         name="Popular"
-        component={require('../screens/PopularScreen').default}
+        component={BrowseByScreen}
+        initialParams={{ mode: 'popular', limit: 24 }}
         options={{
           title: 'Popular',
           headerRight: () => (
