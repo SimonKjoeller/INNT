@@ -1,7 +1,13 @@
-  // SearchedProfileScreen: Follow/Message button row
 import { StyleSheet } from 'react-native'; // StyleSheet API til performance optimeret styles
 
 export const styles = StyleSheet.create({
+  // Error text for forms
+  errorText: {
+    color: '#ff6b6b',
+    marginTop: 8,
+    textAlign: 'center',
+    fontSize: 12,
+  },
   // --- GENEREL LAYOUT ---
   container: {
     flex: 1,

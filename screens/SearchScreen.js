@@ -14,27 +14,21 @@ const SearchScreen = ({ navigation }) => {
           <Text style={styles.browseTitle}>Browse by</Text>
           <TouchableOpacity 
             style={styles.browseOption}
-            onPress={() => navigation.navigate('Popular')}
+            onPress={() => navigation.navigate('Popular', { genreName: 'Popular' })}
           >
-            <Text style={styles.browseText}>Popular Games</Text>
+            <Text style={styles.browseText}>Popular</Text>
           </TouchableOpacity>
           <TouchableOpacity 
             style={styles.browseOption}
-            onPress={() => navigation.navigate('Popular')}
+            onPress={() => navigation.navigate('BrowseBy', { mode: 'trending', limit: 24, genreName: 'Trending' })}
           >
-            <Text style={styles.browseText}>Popular Games</Text>
+            <Text style={styles.browseText}>Trending</Text>
           </TouchableOpacity>
           <TouchableOpacity 
             style={styles.browseOption}
-            onPress={() => navigation.navigate('BrowseBy', { mode: 'trending', limit: 24 })}
+            onPress={() => navigation.navigate('BrowseBy', { mode: 'upcoming', limit: 24, genreName: 'Upcoming' })}
           >
-            <Text style={styles.browseText}>Trending Games</Text>
-          </TouchableOpacity>
-          <TouchableOpacity 
-            style={styles.browseOption}
-            onPress={() => navigation.navigate('BrowseBy', { mode: 'upcoming', limit: 24 })}
-          >
-            <Text style={styles.browseText}>Upcoming Games</Text>
+            <Text style={styles.browseText}>Upcoming</Text>
           </TouchableOpacity>
           <TouchableOpacity 
             style={styles.browseOption}
