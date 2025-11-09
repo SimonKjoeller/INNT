@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+/*import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Image } from 'react-native';
 import { ref, get } from 'firebase/database';
 import { db } from '../database/firebase';
@@ -124,3 +124,4 @@ const UpcomingGames = ({ navigation }) => {
 };
 
 export default UpcomingGames;
+*/

@@ -17,9 +17,9 @@
 - Profile Fetch - username ID # Chrille [x]
   - Nice to have: Gamification. Evt. xp-system # Chrille [x]
 - Profile search - follow account, view profile osv. # Babski & Jæger [x] [Jægers del er done] (Der er flere follow interaktioner der kan laves)
-- Notifikationer # Chrille [] (laves først når Babski & Jæger har fixet Profile search)
+- Notifikationer # Chrille [x] (laves først når Babski & Jæger har fixet Profile search)
     - The user you're following rated this game []
-    - New follower []
+    - New follower [x]
     - Evt. New recommended []
     - Upcoming games []
 - Sortering på genre / kategori # Babski [x] (kan godt tilføjes flere sorteringsmuligheder)

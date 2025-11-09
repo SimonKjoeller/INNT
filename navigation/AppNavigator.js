@@ -18,6 +18,8 @@ import SearchedProfileScreen from '../screens/SearchedProfileScreen';
 import LoginScreen from '../screens/LoginScreen';
 import SignupScreen from '../screens/SignupScreen';
 import LevelUpOverlay from '../components/LevelUpOverlay';
+import FollowNotifications from '../components/FollowNotifications';
+import RatingNotifications from '../components/RatingNotifications';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -333,6 +335,8 @@ const AppNavigator = () => {
           <RootNavigator />
         </NavigationContainer>
         <LevelUpOverlay />
+        <FollowNotifications />
+        <RatingNotifications />
       </>
     </AuthProvider>
   );

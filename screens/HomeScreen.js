@@ -14,7 +14,7 @@ const HomeScreen = ({ navigation }) => {
       <GenreGamesRow navigation={navigation} genreName="Shooter" />
       <GenreGamesRow navigation={navigation} genreName="Racing" />
       <GenreGamesRow navigation={navigation} genreName="Adventure" />
-      <UpcomingGamesHome navigation={navigation} />
+      {/* <UpcomingGamesHome navigation={navigation} /> */}
       {/* Her kan du tilføje flere kategorier senere */}
       {/* <RecentGames navigation={navigation} /> */}
     </ScrollView>
