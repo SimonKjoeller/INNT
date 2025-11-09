@@ -11,7 +11,7 @@ const UpcomingGames = ({ navigation }) => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        fetchUpcomingGames();
+        //fetchUpcomingGames();
     }, []);
 
     const fetchUpcomingGames = async () => {
