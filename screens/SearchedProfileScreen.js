@@ -7,7 +7,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { styles } from '../styles/styles';
 import searchedProfileScreenStyles from '../styles/searchedProfileScreenStyles';
 import { db } from '../database/firebase';
-import { ref, set, get } from 'firebase/database';
+import { ref, set, get, remove } from 'firebase/database';
 import { useAuth } from '../components/Auth';
 
 // Helper to get initials for avatar fallback
@@ -41,16 +41,28 @@ export default function SearchedProfileScreen({ route }) {
     });
   }, [currentUser?.uid, viewedUser?.id]);
 
-  // Follow handler
+  // Follow/Unfollow toggle handler
   const handleFollow = async () => {
     if (!currentUser?.uid || !viewedUser?.id) return;
     setFollowLoading(true);
     try {
-      // Write to /following/{currentUserId}/{viewedUserId}: true
-      await set(ref(db, `following/${currentUser.uid}/${viewedUser.id}`), true);
-      // Write to /followers/{viewedUserId}/{currentUserId}: true
-      await set(ref(db, `followers/${viewedUser.id}/${currentUser.uid}`), true);
-      setIsFollowing(true);
+      const followingPath = `following/${currentUser.uid}/${viewedUser.id}`;
+      const followersPath = `followers/${viewedUser.id}/${currentUser.uid}`;
+      if (isFollowing) {
+        // Unfollow: remove both sides
+        await Promise.all([
+          remove(ref(db, followingPath)),
+          remove(ref(db, followersPath)),
+        ]);
+        setIsFollowing(false);
+      } else {
+        // Follow: set both sides
+        await Promise.all([
+          set(ref(db, followingPath), true),
+          set(ref(db, followersPath), true),
+        ]);
+        setIsFollowing(true);
+      }
     } catch (e) {
       // Optionally show error
     } finally {
@@ -125,12 +137,20 @@ export default function SearchedProfileScreen({ route }) {
         {/* Follow and Message buttons */}
         <View style={searchedProfileScreenStyles.followMessageButtonRow}>
           <TouchableOpacity
-            style={[styles.actionButton, searchedProfileScreenStyles.followMessageButton, isFollowing && { backgroundColor: '#303341' }]}
+            style={[
+              styles.actionButton,
+              searchedProfileScreenStyles.followMessageButton,
+              isFollowing && { backgroundColor: '#303341' },
+            ]}
             activeOpacity={0.85}
             onPress={handleFollow}
-            disabled={isFollowing || followLoading}
+            disabled={followLoading}
           >
-            <Text style={styles.actionButtonText}>{isFollowing ? 'Following' : (followLoading ? 'Following...' : 'Follow')}</Text>
+            <Text style={styles.actionButtonText}>
+              {followLoading
+                ? (isFollowing ? 'Unfollowing...' : 'Following...')
+                : (isFollowing ? 'Unfollow' : 'Follow')}
+            </Text>
           </TouchableOpacity>
           <TouchableOpacity style={[styles.actionButton, styles.actionButtonSecondary, searchedProfileScreenStyles.followMessageButton]} activeOpacity={0.85}>
             <Text style={styles.actionButtonText}>Message</Text>

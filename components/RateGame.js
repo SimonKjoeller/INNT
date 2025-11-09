@@ -523,12 +523,52 @@ export const RateGameDetail = ({ gameId, navigation }) => {
                 timestamp: new Date().toISOString(),
             };
 
+            let createdNew = false;
             if (existingRatingKey) {
                 await set(ref(db, `userRatings/${existingRatingKey}`), ratingData);
                 console.log('✅ Updated rating:', rating);
             } else {
                 await set(push(ratingsRef), ratingData);
+                createdNew = true;
                 console.log('✅ Created rating:', roundedRating);
+            }
+
+            // Foreground-only follower notifications: only notify on first rating of a game by this user
+            if (createdNew) {
+                try {
+                    // Fetch followers list once
+                    const followersSnap = await get(ref(db, `followers/${currentUserId}`));
+                    if (followersSnap.exists()) {
+                        const followersObj = followersSnap.val() || {};
+                        const followerIds = Object.keys(followersObj).filter(Boolean);
+                        if (followerIds.length > 0) {
+                            const userProfileSnap = await get(ref(db, `users/${currentUserId}`));
+                            const userProfileVal = userProfileSnap.exists() ? userProfileSnap.val() : null;
+                            const raterName = userProfileVal?.username || userProfileVal?.displayName || 'Someone';
+                            const gameName = gameData?.name || 'a game';
+                            const now = Date.now();
+                            // Write a simple notification entry per follower under notifications/<followerUid>/rating_<ts>_<gameId>
+                            await Promise.all(
+                                followerIds.map(async (fid) => {
+                                    const notifKey = `rating_${now}_${gameInternalId}_${currentUserId}`;
+                                    await set(ref(db, `notifications/${fid}/${notifKey}`), {
+                                        type: 'rating',
+                                        fromUid: currentUserId,
+                                        gameId: gameInternalId,
+                                        gameName,
+                                        rating: roundedRating,
+                                        title: 'New rating',
+                                        body: `${raterName} rated ${gameName} ${roundedRating}/10`,
+                                        createdAt: now,
+                                        delivered: false,
+                                    });
+                                })
+                            );
+                        }
+                    }
+                } catch (e) {
+                    console.log('Rating notification write failed:', e.message);
+                }
             }
 
             Alert.alert('Success', `Rating saved: ${roundedRating}/10`);
