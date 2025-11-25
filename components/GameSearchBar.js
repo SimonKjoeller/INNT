@@ -12,6 +12,9 @@ const GameSearchBar = ({ navigation }) => {
   // Ny: søge-mode: "games" eller "profiles"
   const [searchMode, setSearchMode] = useState('games');
 
+  // Beregn placeholder-tekst baseret på valgt mode
+  const placeholderText = searchMode === 'profiles' ? 'Search for profiles...' : 'Search for games...';
+
   // Når brugeren skifter mode (games <-> profiles), udløs en søgning med nuværende input
   useEffect(() => {
     const current = (searchText || '').trim();
@@ -145,7 +148,7 @@ const GameSearchBar = ({ navigation }) => {
 
       <TextInput
         style={styles.searchInput}
-        placeholder={"Search for games..."}
+        placeholder={placeholderText}
         placeholderTextColor="#8E8E93"
         value={searchText}
         onChangeText={setSearchText}
