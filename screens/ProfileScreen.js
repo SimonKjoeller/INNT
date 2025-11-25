@@ -20,6 +20,8 @@ export default function ProfileScreen() {
   const [ratingsCount, setRatingsCount] = useState(0);
   const [playedCount, setPlayedCount] = useState(0);
   const [wishlistCount, setWishlistCount] = useState(0);
+  const [followersCount, setFollowersCount] = useState(0);
+  const [followingCount, setFollowingCount] = useState(0);
 
   // Realtime lyttere: opdater counts så snart data ændres
   useEffect(() => {
@@ -34,6 +36,8 @@ export default function ProfileScreen() {
     const wishlistRef = ref(db, `users/${uid}/wishlist`);
     const playedRef = ref(db, `users/${uid}/played`);
     const ratingsRef = ref(db, 'userRatings');
+    const followersRef = ref(db, `followers/${uid}`);
+    const followingRef = ref(db, `following/${uid}`);
     const ratingsQuery = query(ratingsRef, orderByChild('user_id'), equalTo(uid));
 
     const handleWishlist = (snap) => {
@@ -48,15 +52,27 @@ export default function ProfileScreen() {
       const val = snap.exists() ? snap.val() : null;
       setRatingsCount(val ? Object.keys(val).length : 0);
     };
+    const handleFollowers = (snap) => {
+      const val = snap.exists() ? snap.val() : null;
+      setFollowersCount(val ? Object.keys(val).length : 0);
+    };
+    const handleFollowing = (snap) => {
+      const val = snap.exists() ? snap.val() : null;
+      setFollowingCount(val ? Object.keys(val).length : 0);
+    };
 
     onValue(wishlistRef, handleWishlist);
     onValue(playedRef, handlePlayed);
     onValue(ratingsQuery, handleRatings);
+    onValue(followersRef, handleFollowers);
+    onValue(followingRef, handleFollowing);
 
     return () => {
       off(wishlistRef, 'value', handleWishlist);
       off(playedRef, 'value', handlePlayed);
       off(ratingsQuery, 'value', handleRatings);
+      off(followersRef, 'value', handleFollowers);
+      off(followingRef, 'value', handleFollowing);
     };
   }, [user?.uid]);
 
@@ -148,6 +164,20 @@ export default function ProfileScreen() {
             </View>
           </View>
         </LinearGradient>
+
+        {/* Followers / Following row (not clickable) */}
+        <View style={[styles.statRow, { gap: 8, marginBottom: 16 }]}>
+          <View style={styles.smallStatCard}>
+            <Icon name="people" size={16} color="#959688ff" style={styles.statIcon} />
+            <Text style={styles.smallStatValue}>{followersCount}</Text>
+            <Text style={styles.smallStatLabel}>Followers</Text>
+          </View>
+          <View style={styles.smallStatCard}>
+            <Icon name="person-add" size={16} color="#959688ff" style={styles.statIcon} />
+            <Text style={styles.smallStatValue}>{followingCount}</Text>
+            <Text style={styles.smallStatLabel}>Following</Text>
+          </View>
+        </View>
 
         {/* Statistik kort i en Listerække */}    
         <View style={styles.statRow}>

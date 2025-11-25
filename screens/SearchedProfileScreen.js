@@ -7,7 +7,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { styles } from '../styles/styles';
 import searchedProfileScreenStyles from '../styles/searchedProfileScreenStyles';
 import { db } from '../database/firebase';
-import { ref, set, get, remove, query, orderByChild, equalTo } from 'firebase/database';
+import { ref, set, get, remove, query, orderByChild, equalTo, onValue, off } from 'firebase/database';
 import { useAuth } from '../components/Auth';
 
 // Helper to get initials for avatar fallback
@@ -74,8 +74,39 @@ export default function SearchedProfileScreen({ route }) {
   const [dynamicRatings, setDynamicRatings] = useState(null);
   const [dynamicPlayed, setDynamicPlayed] = useState(null);
   const [dynamicWishlist, setDynamicWishlist] = useState(null);
+  const [followersCount, setFollowersCount] = useState(0);
+  const [followingCount, setFollowingCount] = useState(0);
 
   const targetUid = viewedUser?.id || viewedUser?.uid || viewedUser?.firebaseKey || null;
+
+  // Realtime followers/following counts for the viewed user
+  useEffect(() => {
+    if (!targetUid) {
+      setFollowersCount(0);
+      setFollowingCount(0);
+      return;
+    }
+
+    const followersRef = ref(db, `followers/${targetUid}`);
+    const followingRef = ref(db, `following/${targetUid}`);
+
+    const handleFollowers = (snap) => {
+      const val = snap.exists() ? snap.val() : null;
+      setFollowersCount(val ? Object.keys(val).length : 0);
+    };
+    const handleFollowing = (snap) => {
+      const val = snap.exists() ? snap.val() : null;
+      setFollowingCount(val ? Object.keys(val).length : 0);
+    };
+
+    onValue(followersRef, handleFollowers);
+    onValue(followingRef, handleFollowing);
+
+    return () => {
+      off(followersRef, 'value', handleFollowers);
+      off(followingRef, 'value', handleFollowing);
+    };
+  }, [targetUid]);
 
   // Fetch live counts for viewed user (one-shot, foreground only)
   useEffect(() => {
@@ -180,7 +211,7 @@ export default function SearchedProfileScreen({ route }) {
           </View>
         </LinearGradient>
 
-        {/* Follow and Message buttons */}
+        {/* Follow button full width (no Message button on searched profiles) */}
         <View style={searchedProfileScreenStyles.followMessageButtonRow}>
           <TouchableOpacity
             style={[
@@ -198,9 +229,20 @@ export default function SearchedProfileScreen({ route }) {
                 : (isFollowing ? 'Unfollow' : 'Follow')}
             </Text>
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.actionButton, styles.actionButtonSecondary, searchedProfileScreenStyles.followMessageButton]} activeOpacity={0.85}>
-            <Text style={styles.actionButtonText}>Message</Text>
-          </TouchableOpacity>
+        </View>
+
+        {/* Followers / Following row (not clickable) */}
+        <View style={[styles.statRow, { gap: 8, marginBottom: 16 }]}>
+          <View style={styles.smallStatCard}>
+            <Icon name="people" size={16} color="#959688ff" style={styles.statIcon} />
+            <Text style={styles.smallStatValue}>{followersCount}</Text>
+            <Text style={styles.smallStatLabel}>Followers</Text>
+          </View>
+          <View style={styles.smallStatCard}>
+            <Icon name="person-add" size={16} color="#959688ff" style={styles.statIcon} />
+            <Text style={styles.smallStatValue}>{followingCount}</Text>
+            <Text style={styles.smallStatLabel}>Following</Text>
+          </View>
         </View>
 
         {/* Stat row (interactive) */}

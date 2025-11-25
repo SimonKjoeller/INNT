@@ -3,15 +3,16 @@ import { StyleSheet } from 'react-native';
 
 const searchedProfileScreenStyles = StyleSheet.create({
   followMessageButtonRow: {
-    flexDirection: 'row',
+    flexDirection: 'column',
     justifyContent: 'center',
-    gap: 12,
+    alignItems: 'stretch',
+    width: '100%',
+    gap: 8,
     marginTop: 1,
     marginBottom: 8
   },
   followMessageButton: {
-    flex: 1,
-    maxWidth: 180
+    width: '100%'
   },
 });
 
