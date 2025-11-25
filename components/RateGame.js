@@ -555,6 +555,7 @@ export const RateGameDetail = ({ gameId, navigation }) => {
                                         type: 'rating',
                                         fromUid: currentUserId,
                                         gameId: gameInternalId,
+                                        gameKey: gameIdStr,
                                         gameName,
                                         rating: roundedRating,
                                         title: 'New rating',
