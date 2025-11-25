@@ -170,10 +170,14 @@ export default function SearchedProfileScreen({ route }) {
 
   // Handler for stat card press
   const handlePressStat = (tabKey) => {
-    // Navigate to Library tab, passing userId and initialTab
+    // Navigate to Library tab, passing target user + initialTab + display name
     navigation.navigate('Library', {
       screen: 'LibraryMain',
-      params: { initialTab: tabKey, userId: viewedUser?.id || viewedUser?.uid || viewedUser?.firebaseKey },
+      params: {
+        initialTab: tabKey,
+        userId: viewedUser?.id || viewedUser?.uid || viewedUser?.firebaseKey,
+        viewedUsername: username,
+      },
     });
   };
 
