@@ -217,6 +217,27 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 12,
     alignItems: 'center',
   },
+  // Smaller, alternative-colored stat card (for followers/following)
+  smallStatCard: {
+    flex: 1,
+    backgroundColor: '#303341',
+    borderRadius: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 8,
+    alignItems: 'center',
+  },
+  smallStatValue: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#ffffff',
+    marginBottom: 2,
+  },
+  smallStatLabel: {
+    fontSize: 10,
+    textTransform: 'uppercase',
+    letterSpacing: 0.4,
+    color: '#8a8f98',
+  },
   statIcon: {
     marginBottom: 6,
   },
