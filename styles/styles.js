@@ -107,6 +107,7 @@ export const styles = StyleSheet.create({
   // --- PROFIL SPECIFIKKE STYLES ---
   profileHeader: {
     alignItems: 'center',
+    marginTop: 12,
     marginBottom: 32,
   },
   logo: {
@@ -116,9 +117,9 @@ export const styles = StyleSheet.create({
     borderRadius: 24,
   },
   avatarFallback: {
-    width: 96,
-    height: 96,
-    borderRadius: 24,
+    width: 80,
+    height: 80,
+    borderRadius: 20,
     backgroundColor: '#24262f',
     alignItems: 'center',
     justifyContent: 'center',
@@ -149,16 +150,13 @@ export const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   avatarRing: {
-    borderWidth: 2,
-    borderColor: '#6756fcff',
-    borderRadius: 26,
-    padding: 3,
-    marginBottom: 6,
+    // Deprecated: ring removed from profile avatar
   },
   avatar: {
     width: 80,
     height: 80,
     borderRadius: 20,
+    marginTop: 0,
     marginBottom: 4,
   },
   levelRow: {
@@ -389,5 +387,102 @@ export const styles = StyleSheet.create({
     color: '#9aa0a6',
     fontSize: 12,
     textDecorationLine: 'underline',
+  },
+
+  // --- LEADERBOARD ---
+  leaderboardContainer: {
+    flex: 1,
+    backgroundColor: '#181A20',
+    paddingTop: 8,
+  },
+  leaderboardHeader: {
+    paddingHorizontal: 20,
+    paddingBottom: 12,
+  },
+  leaderboardTitle: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#ffffff',
+    letterSpacing: 0.5,
+  },
+  leaderboardSubtitle: {
+    fontSize: 12,
+    color: '#9aa0a6',
+    marginTop: 4,
+  },
+  leaderboardListContent: {
+    paddingHorizontal: 16,
+    paddingBottom: 40,
+  },
+  leaderboardRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#22252d',
+    borderRadius: 14,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    marginBottom: 10,
+  },
+  leaderboardCurrentRow: {
+    backgroundColor: '#2c3140',
+    borderWidth: 1,
+    borderColor: '#6756fcff',
+  },
+  leaderboardRankWrap: {
+    width: 40,
+    alignItems: 'center',
+  },
+  leaderboardRank: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#ffffff',
+  },
+  leaderboardUserInfo: {
+    flex: 1,
+    paddingRight: 12,
+  },
+  leaderboardName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#ffffff',
+  },
+  leaderboardMetaLine: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 2,
+  },
+  leaderboardFollowers: {
+    fontSize: 12,
+    color: '#8a8f98',
+    fontWeight: '600',
+  },
+  leaderboardCurrentFollowers: {
+    color: '#ffd369',
+  },
+  leaderboardYouBadge: {
+    backgroundColor: '#6756fcff',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
+  },
+  leaderboardYouText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+  },
+  leaderboardCenter: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  leaderboardLoadingText: {
+    marginTop: 10,
+    color: '#9aa0a6',
+  },
+  leaderboardErrorText: {
+    color: '#ff6b6b',
+    fontWeight: '600',
   },
 });

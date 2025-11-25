@@ -129,15 +129,13 @@ export default function ProfileScreen() {
           style={styles.headerGradient}
         >
           <View style={styles.profileHeader}>
-            <View style={styles.avatarRing}>
-              {avatarUri ? (
-                <Image source={{ uri: avatarUri }} style={styles.avatar} resizeMode="cover" />
-              ) : (
-                <View style={styles.avatarFallback}>
-                  <Text style={styles.avatarFallbackText}>{(displayName || 'U').slice(0,1).toUpperCase()}</Text>
-                </View>
-              )}
-            </View>
+            {avatarUri ? (
+              <Image source={{ uri: avatarUri }} style={styles.avatar} resizeMode="cover" />
+            ) : (
+              <View style={styles.avatarFallback}>
+                <Text style={styles.avatarFallbackText}>{(displayName || 'U').slice(0,1).toUpperCase()}</Text>
+              </View>
+            )}
             <Text style={styles.gamerTag}>{displayName}</Text>
             <View style={styles.levelRow}>
               <View style={styles.levelBadge}>
@@ -199,8 +197,8 @@ export default function ProfileScreen() {
         
         {/* Handlingsknapper til fremtidige features */}
         <View style={styles.actionRow}>
-          <TouchableOpacity style={styles.actionButton} activeOpacity={0.85}>
-            <Text style={styles.actionButtonText}>Rate Game</Text>
+          <TouchableOpacity style={styles.actionButton} activeOpacity={0.85} onPress={() => navigation.navigate('Leaderboard')}>
+            <Text style={styles.actionButtonText}>Leaderboard</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.actionButton, styles.actionButtonSecondary]}
