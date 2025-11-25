@@ -7,7 +7,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { styles } from '../styles/styles';
 import searchedProfileScreenStyles from '../styles/searchedProfileScreenStyles';
 import { db } from '../database/firebase';
-import { ref, set, get, remove, query, orderByChild, equalTo, onValue, off } from 'firebase/database';
+import { ref, set, get, remove, query, orderByChild, equalTo, onValue, off, push } from 'firebase/database';
 import { useAuth } from '../components/Auth';
 
 // Helper to get initials for avatar fallback
@@ -43,11 +43,12 @@ export default function SearchedProfileScreen({ route }) {
 
   // Follow/Unfollow toggle handler
   const handleFollow = async () => {
-    if (!currentUser?.uid || !viewedUser?.id) return;
+    const targetId = viewedUser?.id || viewedUser?.uid || viewedUser?.firebaseKey;
+    if (!currentUser?.uid || !targetId) return;
     setFollowLoading(true);
     try {
-      const followingPath = `following/${currentUser.uid}/${viewedUser.id}`;
-      const followersPath = `followers/${viewedUser.id}/${currentUser.uid}`;
+      const followingPath = `following/${currentUser.uid}/${targetId}`;
+      const followersPath = `followers/${targetId}/${currentUser.uid}`;
       if (isFollowing) {
         // Unfollow: remove both sides
         await Promise.all([
@@ -61,6 +62,36 @@ export default function SearchedProfileScreen({ route }) {
           set(ref(db, followingPath), true),
           set(ref(db, followersPath), true),
         ]);
+        // Persist follow notification for target so their bell updates (avoid duplicates)
+        try {
+          const notifRef = ref(db, `notifications/${targetId}`);
+          const existingListSnap = await get(notifRef);
+            let duplicate = false;
+            if (existingListSnap.exists()) {
+              const all = existingListSnap.val() || {};
+              for (const k of Object.keys(all)) {
+                const v = all[k];
+                if (v && v.type === 'follow' && v.fromUid === currentUser.uid && !v.read) {
+                  duplicate = true;
+                  break;
+                }
+              }
+            }
+            if (!duplicate) {
+              const newRef = push(notifRef);
+              const displayName = currentUser.displayName || currentUser.username || currentUser.email || 'Someone';
+              await set(newRef, {
+                type: 'follow',
+                fromUid: currentUser.uid,
+                title: 'New follower',
+                body: `${displayName} started following you`,
+                read: false,
+                createdAt: Date.now(),
+              });
+            }
+        } catch (e) {
+          // ignore notification write failure
+        }
         setIsFollowing(true);
       }
     } catch (e) {
