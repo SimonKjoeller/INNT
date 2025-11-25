@@ -11,9 +11,7 @@ const HomeScreen = ({ navigation }) => {
     <ScrollView style={homeScreenStyles.container} showsVerticalScrollIndicator={false}>
       <PopularGames navigation={navigation} />
       <TrendingGames navigation={navigation} />
-      <GenreGamesRow navigation={navigation} genreName="Shooter" />
-      <GenreGamesRow navigation={navigation} genreName="Racing" />
-      <GenreGamesRow navigation={navigation} genreName="Adventure" />
+      
       { <UpcomingGamesHome navigation={navigation}/> }
       {/* Her kan du tilføje flere kategorier senere */}
       {/* <RecentGames navigation={navigation} /> */}

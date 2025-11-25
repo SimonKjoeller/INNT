@@ -13,6 +13,7 @@ import SearchScreen from '../screens/SearchScreen';
 import LibraryScreen from '../screens/LibraryScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import EditProfileScreen from '../screens/EditProfileScreen';
+import LeaderboardScreen from '../screens/LeaderboardScreen';
 import BrowseByScreen from '../screens/BrowseByScreen';
 import RateGameScreen from '../screens/RateGameScreen';
 import SearchedProfileScreen from '../screens/SearchedProfileScreen';
@@ -263,6 +264,13 @@ const ProfileStack = () => {
         component={ProfileScreen}
         options={{
           title: 'Profile',
+        }}
+      />
+      <Stack.Screen
+        name="Leaderboard"
+        component={LeaderboardScreen}
+        options={{
+          title: 'Leaderboard',
         }}
       />
       <Stack.Screen
