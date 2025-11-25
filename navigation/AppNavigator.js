@@ -1,4 +1,5 @@
 import React from 'react';
+import { View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
@@ -20,6 +21,8 @@ import SignupScreen from '../screens/SignupScreen';
 import LevelUpOverlay from '../components/LevelUpOverlay';
 import FollowNotifications from '../components/FollowNotifications';
 import RatingNotifications from '../components/RatingNotifications';
+import NotificationsBell from '../components/NotificationsBell';
+import NotificationsScreen from '../screens/NotificationsScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -32,6 +35,9 @@ const HomeStack = () => {
         headerStyle: navigationStyles.headerStyle,
         headerTintColor: navigationStyles.headerTintColor,
         headerTitleStyle: navigationStyles.headerTitleStyle,
+        headerRight: () => (
+          <NotificationsBell tintColor={navigationStyles.headerTintColor} />
+        ),
       }}
     >
       <Stack.Screen
@@ -48,7 +54,10 @@ const HomeStack = () => {
         options={{
           title: 'Popular',
           headerRight: () => (
-            <Icon name="options-outline" size={26} color={navigationStyles.headerTintColor} style={{ marginRight: 16 }} />
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Icon name="options-outline" size={26} color={navigationStyles.headerTintColor} style={{ marginRight: 12 }} />
+              <NotificationsBell tintColor={navigationStyles.headerTintColor} />
+            </View>
           ),
         }}
       />
@@ -59,7 +68,10 @@ const HomeStack = () => {
         options={{
           title: 'Trending',
           headerRight: () => (
-            <Icon name="options-outline" size={26} color={navigationStyles.headerTintColor} style={{ marginRight: 16 }} />
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Icon name="options-outline" size={26} color={navigationStyles.headerTintColor} style={{ marginRight: 12 }} />
+              <NotificationsBell tintColor={navigationStyles.headerTintColor} />
+            </View>
           ),
         }}
       />
@@ -77,7 +89,10 @@ const HomeStack = () => {
         options={{
           title: 'Upcoming',
           headerRight: () => (
-            <Icon name="options-outline" size={26} color={navigationStyles.headerTintColor} style={{ marginRight: 16 }} />
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Icon name="options-outline" size={26} color={navigationStyles.headerTintColor} style={{ marginRight: 12 }} />
+              <NotificationsBell tintColor={navigationStyles.headerTintColor} />
+            </View>
           ),
         }}
       />
@@ -95,6 +110,11 @@ const HomeStack = () => {
           title: 'User Profile',
         }}
       />
+      <Stack.Screen
+        name="Notifications"
+        component={NotificationsScreen}
+        options={{ title: 'Notifications' }}
+      />
     </Stack.Navigator>
   );
 };
@@ -106,6 +126,9 @@ const SearchStack = () => {
         headerStyle: navigationStyles.headerStyle,
         headerTintColor: navigationStyles.headerTintColor,
         headerTitleStyle: navigationStyles.headerTitleStyle,
+        headerRight: () => (
+          <NotificationsBell tintColor={navigationStyles.headerTintColor} />
+        ),
       }}
     >
       <Stack.Screen
@@ -122,7 +145,10 @@ const SearchStack = () => {
         options={{
           title: 'Popular',
           headerRight: () => (
-            <Icon name="options-outline" size={26} color={navigationStyles.headerTintColor} style={{ marginRight: 16 }} />
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Icon name="options-outline" size={26} color={navigationStyles.headerTintColor} style={{ marginRight: 12 }} />
+              <NotificationsBell tintColor={navigationStyles.headerTintColor} />
+            </View>
           ),
         }}
       />
@@ -133,7 +159,10 @@ const SearchStack = () => {
         options={{
           title: 'Trending',
           headerRight: () => (
-            <Icon name="options-outline" size={26} color={navigationStyles.headerTintColor} style={{ marginRight: 16 }} />
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Icon name="options-outline" size={26} color={navigationStyles.headerTintColor} style={{ marginRight: 12 }} />
+              <NotificationsBell tintColor={navigationStyles.headerTintColor} />
+            </View>
           ),
         }}
       />
@@ -151,7 +180,10 @@ const SearchStack = () => {
         options={{
           title: 'Upcoming',
           headerRight: () => (
-            <Icon name="options-outline" size={26} color={navigationStyles.headerTintColor} style={{ marginRight: 16 }} />
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Icon name="options-outline" size={26} color={navigationStyles.headerTintColor} style={{ marginRight: 12 }} />
+              <NotificationsBell tintColor={navigationStyles.headerTintColor} />
+            </View>
           ),
         }}
       />
@@ -170,6 +202,11 @@ const SearchStack = () => {
           title: 'User Profile',
         }}
       />
+      <Stack.Screen
+        name="Notifications"
+        component={NotificationsScreen}
+        options={{ title: 'Notifications' }}
+      />
     </Stack.Navigator>
   );
 };
@@ -181,6 +218,9 @@ const LibraryStack = () => {
         headerStyle: navigationStyles.headerStyle,
         headerTintColor: navigationStyles.headerTintColor,
         headerTitleStyle: navigationStyles.headerTitleStyle,
+        headerRight: () => (
+          <NotificationsBell tintColor={navigationStyles.headerTintColor} />
+        ),
       }}
     >
       <Stack.Screen
@@ -197,6 +237,11 @@ const LibraryStack = () => {
           title: 'Rate Game',
         }}
       />
+      <Stack.Screen
+        name="Notifications"
+        component={NotificationsScreen}
+        options={{ title: 'Notifications' }}
+      />
     </Stack.Navigator>
   );
 };
@@ -208,6 +253,9 @@ const ProfileStack = () => {
         headerStyle: navigationStyles.headerStyle,
         headerTintColor: navigationStyles.headerTintColor,
         headerTitleStyle: navigationStyles.headerTitleStyle,
+        headerRight: () => (
+          <NotificationsBell tintColor={navigationStyles.headerTintColor} />
+        ),
       }}
     >
       <Stack.Screen
@@ -223,6 +271,11 @@ const ProfileStack = () => {
         options={{
           title: 'Edit Profile',
         }}
+      />
+      <Stack.Screen
+        name="Notifications"
+        component={NotificationsScreen}
+        options={{ title: 'Notifications' }}
       />
     </Stack.Navigator>
   );

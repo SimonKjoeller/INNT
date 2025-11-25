@@ -7,7 +7,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { styles } from '../styles/styles';
 import searchedProfileScreenStyles from '../styles/searchedProfileScreenStyles';
 import { db } from '../database/firebase';
-import { ref, set, get, remove } from 'firebase/database';
+import { ref, set, get, remove, query, orderByChild, equalTo } from 'firebase/database';
 import { useAuth } from '../components/Auth';
 
 // Helper to get initials for avatar fallback
@@ -71,9 +71,55 @@ export default function SearchedProfileScreen({ route }) {
   };
 
   // Stats: try to get from user object, fallback to 0
-  const ratingsCount = viewedUser?.ratingsCount ?? viewedUser?.ratings_count ?? 0;
-  const playedCount = viewedUser?.playedCount ?? viewedUser?.played_count ?? 0;
-  const wishlistCount = viewedUser?.wishlistCount ?? viewedUser?.wishlist_count ?? 0;
+  const [dynamicRatings, setDynamicRatings] = useState(null);
+  const [dynamicPlayed, setDynamicPlayed] = useState(null);
+  const [dynamicWishlist, setDynamicWishlist] = useState(null);
+
+  const targetUid = viewedUser?.id || viewedUser?.uid || viewedUser?.firebaseKey || null;
+
+  // Fetch live counts for viewed user (one-shot, foreground only)
+  useEffect(() => {
+    let cancelled = false;
+    const fetchCounts = async () => {
+      if (!targetUid) return;
+      try {
+        // Ratings count via userRatings query
+        const ratingsQ = query(ref(db, 'userRatings'), orderByChild('user_id'), equalTo(targetUid));
+        const ratingsSnap = await get(ratingsQ);
+        if (!cancelled) {
+          const rc = ratingsSnap.exists() ? Object.keys(ratingsSnap.val()).length : 0;
+          setDynamicRatings(rc);
+        }
+
+        // Played list count
+        const playedSnap = await get(ref(db, `users/${targetUid}/played`));
+        if (!cancelled) {
+          const pc = playedSnap.exists() ? Object.keys(playedSnap.val()).length : 0;
+          setDynamicPlayed(pc);
+        }
+
+        // Wishlist count
+        const wishlistSnap = await get(ref(db, `users/${targetUid}/wishlist`));
+        if (!cancelled) {
+          const wc = wishlistSnap.exists() ? Object.keys(wishlistSnap.val()).length : 0;
+          setDynamicWishlist(wc);
+        }
+      } catch (e) {
+        if (!cancelled) {
+          // Fallback to zeros only if dynamic states untouched
+          setDynamicRatings(r => (r === null ? 0 : r));
+          setDynamicPlayed(p => (p === null ? 0 : p));
+          setDynamicWishlist(w => (w === null ? 0 : w));
+        }
+      }
+    };
+    fetchCounts();
+    return () => { cancelled = true; };
+  }, [targetUid]);
+
+  const ratingsCount = (dynamicRatings !== null) ? dynamicRatings : (viewedUser?.ratingsCount ?? viewedUser?.ratings_count ?? 0);
+  const playedCount = (dynamicPlayed !== null) ? dynamicPlayed : (viewedUser?.playedCount ?? viewedUser?.played_count ?? 0);
+  const wishlistCount = (dynamicWishlist !== null) ? dynamicWishlist : (viewedUser?.wishlistCount ?? viewedUser?.wishlist_count ?? 0);
 
   // Level & XP calculation (same as ProfileScreen)
   const derivedXP = useMemo(() => (ratingsCount * 50) + (playedCount * 18) + (wishlistCount * 15), [ratingsCount, playedCount, wishlistCount]);
