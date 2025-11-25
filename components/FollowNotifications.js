@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { Platform } from 'react-native';
 import * as Notifications from 'expo-notifications';
-import { ref, get, onChildAdded } from 'firebase/database';
+import { ref, get, onChildAdded, push, set } from 'firebase/database';
 import { db } from '../database/firebase';
 import { useAuth } from './Auth';
 
@@ -99,6 +99,38 @@ export default function FollowNotifications() {
         } catch (e) {
           // console.warn('Failed to schedule local notification', e);
         }
+
+        // Persist notification in DB so bell/unread count updates (avoid duplicates)
+        try {
+          const notifListRef = ref(db, `notifications/${user.uid}`);
+          const existingSnap = await get(notifListRef);
+          let duplicate = false;
+          if (existingSnap.exists()) {
+            const all = existingSnap.val() || {};
+            for (const key of Object.keys(all)) {
+              const v = all[key];
+              if (v && v.type === 'follow' && v.fromUid === followerUid && v.read === false) {
+                duplicate = true;
+                break;
+              }
+            }
+          }
+          if (!duplicate) {
+            const newRef = push(notifListRef);
+            await set(newRef, {
+              type: 'follow',
+              fromUid: followerUid,
+              title: 'New follower',
+              body: `${followerName} started following you`,
+              read: false,
+              createdAt: Date.now(),
+            });
+          }
+        } catch (e) {
+          // Silently ignore persistence failure
+        }
+
+        // (DB persistence intentionally removed per user request revert)
       });
 
       unsubscribeRef.current = unsubscribe;
