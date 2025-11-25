@@ -5,7 +5,7 @@ import navigationStyles from '../styles/navigationStyles';
 import FilterModal from '../components/FilterModal';
 import styles from '../styles/browseByStyles';
 import globalStyles from '../styles/globalStyles';
-import { ref, get, query, orderByChild, limitToLast } from 'firebase/database';
+import { ref, get, query, orderByChild, limitToLast, startAt } from 'firebase/database';
 import { db } from '../database/firebase';
 
 const normalizeGenres = (genres) => {
@@ -61,12 +61,24 @@ const BrowseByScreen = ({ route, navigation }) => {
   const fetchData = async () => {
     try {
       const gamesRef = ref(db, 'games');
+      const nowSeconds = Math.floor(Date.now() / 1000);
+      const normalizeDate = (val) => {
+        const n = Number(val);
+        if (!isFinite(n)) return 0;
+        if (n > 1e12) return Math.floor(n / 1000);
+        if (n > 1e9) return n;
+        if (n >= 1900 && n <= 3000) return Math.floor(new Date(n, 0, 1).getTime() / 1000);
+        return n;
+      };
       // For at sikre 24 rigtige genre-spil: hent i batches og filtrér indtil vi har nok
       const ensureAtLeast = async (needed) => {
-        let limitToTry = Math.max(needed * 3, 200); // start større for at undgå mange calls
+        let limitToTry = Math.max(needed * 3, 200); // start larger to avoid many calls
         let collected = [];
+        const isUpcoming = mode === 'upcoming';
         while (true) {
-          const q = query(gamesRef, orderByChild('reviewCount'), limitToLast(limitToTry));
+          const q = isUpcoming
+            ? query(gamesRef, orderByChild('first_release_date'), limitToLast(limitToTry))
+            : query(gamesRef, orderByChild('reviewCount'), limitToLast(limitToTry));
           const snap = await get(q);
           if (!snap.exists()) break;
           const arr = [];
@@ -74,34 +86,24 @@ const BrowseByScreen = ({ route, navigation }) => {
             const g = child.val();
             arr.push({ firebaseKey: child.key, id: g?.id || child.key, ...g });
           });
+          // Firebase returns ascending order; reverse to make newest last->first when needed
           arr.reverse();
           // Apply genre filter (from modal or route)
           let genreToUse = filterGenre || (mode === 'genre' ? genreKey : null);
           if (genreToUse) {
             collected = arr.filter(g => normalizeGenres(g.genres || g.genre || g.categories).includes(genreToUse.toLowerCase()));
-          } else if (mode === 'upcoming') {
-            const now = new Date();
-            collected = arr.filter(g => g.first_release_date && new Date(g.first_release_date) > now);
-          } else if (mode === 'popular') {
-            collected = arr;
-          } else if (mode === 'trending') {
+          } else if (isUpcoming) {
+            // Match PopularGames behavior: do not pre-filter by now, just use
+            // ordering by first_release_date and take the top items (limitToLast).
             collected = arr;
           } else {
             collected = arr;
           }
           // Apply sort (from modal)
           if (filterSort === 'Oldest') {
-            collected = [...collected].sort((a, b) => {
-              const aDate = a.first_release_date ? new Date(a.first_release_date) : 0;
-              const bDate = b.first_release_date ? new Date(b.first_release_date) : 0;
-              return aDate - bDate;
-            });
+            collected = [...collected].sort((a, b) => normalizeDate(a.first_release_date) - normalizeDate(b.first_release_date));
           } else if (filterSort === 'Newest') {
-            collected = [...collected].sort((a, b) => {
-              const aDate = a.first_release_date ? new Date(a.first_release_date) : 0;
-              const bDate = b.first_release_date ? new Date(b.first_release_date) : 0;
-              return bDate - aDate;
-            });
+            collected = [...collected].sort((a, b) => normalizeDate(b.first_release_date) - normalizeDate(a.first_release_date));
           }
           if (collected.length >= needed || limitToTry >= 2000) break;
           limitToTry = Math.min(limitToTry * 2, 2000);

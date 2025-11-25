@@ -1,6 +1,6 @@
-/*import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Image } from 'react-native';
-import { ref, get } from 'firebase/database';
+import { ref, get, query, orderByChild, startAt, limitToLast } from 'firebase/database';
 import { db } from '../database/firebase';
 import { popularGamesStyles } from '../styles/homeStyles';
 import sessionCache from '../caching/sessionCache';
@@ -11,55 +11,74 @@ const UpcomingGames = ({ navigation }) => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        //fetchUpcomingGames();
+        fetchUpcomingGames();
     }, []);
 
     const fetchUpcomingGames = async () => {
         try {
             const gamesRef = ref(db, 'games');
-            const snapshot = await get(gamesRef);
+            const nowSeconds = Math.floor(Date.now() / 1000);
+
+            // Query upcoming games and pick the furthest-future 10 entries (unreleased)
+            const upcomingQuery = query(
+                gamesRef,
+                orderByChild('first_release_date'),
+                startAt(nowSeconds),
+                limitToLast(10)
+            );
+
+            const snapshot = await get(upcomingQuery);
             if (snapshot.exists()) {
                 const gamesArray = [];
-                const today = new Date();
                 snapshot.forEach((childSnapshot) => {
                     const gameData = childSnapshot.val();
-                    let releaseDate = null;
-                    if (gameData.first_release_date) {
-                        releaseDate = new Date(gameData.first_release_date);
-                        if (isNaN(releaseDate.getTime())) {
-                            releaseDate = new Date(Number(gameData.first_release_date));
-                        }
-                    }
-                    if (releaseDate && releaseDate > today) {
-                        const entry = {
-                            firebaseKey: childSnapshot.key,
-                            id: gameData?.id || childSnapshot.key,
-                            ...gameData
-                        };
-                        gamesArray.push(entry);
-                    }
+                    const entry = {
+                        firebaseKey: childSnapshot.key,
+                        id: gameData?.id || childSnapshot.key,
+                        ...gameData,
+                    };
+                    gamesArray.push(entry);
                 });
-                gamesArray.sort((a, b) => new Date(a.first_release_date) - new Date(b.first_release_date));
-                const upcoming10 = gamesArray.slice(0, 10);
+
+                // Normalize & sort by first_release_date (descending) so the
+                // furthest-future/unreleased games appear first regardless of
+                // how dates are stored (seconds, milliseconds, or year).
+                const normalizeDate = (val) => {
+                    const n = Number(val);
+                    if (!isFinite(n)) return 0;
+                    if (n > 1e12) return Math.floor(n / 1000);
+                    if (n > 1e9) return n;
+                    if (n >= 1900 && n <= 3000) return Math.floor(new Date(n, 0, 1).getTime() / 1000);
+                    return n;
+                };
+
+                gamesArray.sort((a, b) => {
+                    const ra = normalizeDate(a.first_release_date);
+                    const rb = normalizeDate(b.first_release_date);
+                    return rb - ra; // descending
+                });
+
+                // Cache preview items
                 try {
-                    for (const entry of upcoming10) {
+                    for (const entry of gamesArray) {
                         const key = entry.firebaseKey;
                         const already = sessionCache.get(key);
                         if (!already) {
                             const cachedEntry = { ...entry, __cachedFromSource: 'upcoming' };
                             sessionCache.set(key, cachedEntry);
-                            const evicted = listCache.add(key);
+                            listCache.add(key);
                         }
                     }
                 } catch (e) {
-                    console.log('[UpcomingGames] cache loop error', e?.message || e);
+                    console.log('[UpcomingGamesHome] cache loop error', e?.message || e);
                 }
-                setUpcomingGames(upcoming10);
+
+                setUpcomingGames(gamesArray);
             } else {
                 setUpcomingGames([]);
             }
         } catch (error) {
-            console.error('Error fetching upcoming games:', error);
+            console.error('[UpcomingGamesHome] fetch error', error);
             setUpcomingGames([]);
         } finally {
             setLoading(false);
@@ -81,7 +100,7 @@ const UpcomingGames = ({ navigation }) => {
 
     return (
         <View style={popularGamesStyles.container}>
-            <TouchableOpacity 
+            <TouchableOpacity
                 style={popularGamesStyles.titleContainer}
                 onPress={() => navigation.navigate('Upcoming')}
             >
@@ -99,20 +118,13 @@ const UpcomingGames = ({ navigation }) => {
                         style={[
                             popularGamesStyles.gameCard,
                             { marginLeft: index === 0 ? 20 : 10 },
-                            { marginRight: index === upcomingGames.length - 1 ? 20 : 0 }
+                            { marginRight: index === upcomingGames.length - 1 ? 20 : 0 },
                         ]}
                         onPress={() => handleGamePress(game)}
                     >
-                        <Image
-                            source={{ uri: game.coverUrl }}
-                            style={popularGamesStyles.gameImage}
-                            resizeMode="cover"
-                        />
+                        <Image source={{ uri: game.coverUrl }} style={popularGamesStyles.gameImage} resizeMode="cover" />
                         <View style={popularGamesStyles.gameInfo}>
-                            <Text
-                                style={popularGamesStyles.gameName}
-                                numberOfLines={2}
-                            >
+                            <Text style={popularGamesStyles.gameName} numberOfLines={2}>
                                 {game.name}
                             </Text>
                         </View>
@@ -124,4 +136,3 @@ const UpcomingGames = ({ navigation }) => {
 };
 
 export default UpcomingGames;
-*/
