@@ -160,7 +160,14 @@ const GameRatingsThread = ({ gameInternalId, currentUserId, includeSelf = true }
             return [...list].sort((a, b) => (b.upvotes - b.downvotes) - (a.upvotes - a.downvotes));
         }
         if (sortMode === 'down') {
-            return [...list].sort((a, b) => (b.downvotes - b.upvotes) - (a.downvotes - a.upvotes));
+            // Sort strictly by number of downvotes (desc), then fewer upvotes, then newest
+            return [...list].sort((a, b) => {
+                const primary = (b.downvotes || 0) - (a.downvotes || 0);
+                if (primary !== 0) return primary;
+                const secondary = (a.upvotes || 0) - (b.upvotes || 0);
+                if (secondary !== 0) return secondary;
+                return new Date(b.timestamp) - new Date(a.timestamp);
+            });
         }
         return list;
     }, [sortMode]);
