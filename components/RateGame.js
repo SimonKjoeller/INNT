@@ -526,11 +526,11 @@ export const RateGameDetail = ({ gameId, navigation }) => {
             let createdNew = false;
             if (existingRatingKey) {
                 await set(ref(db, `userRatings/${existingRatingKey}`), ratingData);
-                console.log('✅ Updated rating:', rating);
+                console.log(' Updated rating:', rating);
             } else {
                 await set(push(ratingsRef), ratingData);
                 createdNew = true;
-                console.log('✅ Created rating:', roundedRating);
+                console.log(' Created rating:', roundedRating);
             }
 
             // Foreground-only follower notifications: only notify on first rating of a game by this user
@@ -598,7 +598,7 @@ export const RateGameDetail = ({ gameId, navigation }) => {
                 setIsOnWishlist(false);
                 setWishlistKey(null);
                 Alert.alert('Success', `${gameData.name} removed from your wishlist!`);
-                console.log('✅ Removed from wishlist:', gameData.name);
+                console.log(' Removed from wishlist:', gameData.name);
             } else {
                 // Tilføj til wishlist
                 const wishlistData = {
@@ -614,7 +614,7 @@ export const RateGameDetail = ({ gameId, navigation }) => {
                 setIsOnWishlist(true);
                 setWishlistKey(newWishlistRef.key);
                 Alert.alert('Success', `${gameData.name} added to your wishlist!`);
-                console.log('✅ Added to wishlist:', gameData.name);
+                console.log(' Added to wishlist:', gameData.name);
             }
         } catch (error) {
             console.error('Error toggling wishlist:', error);
@@ -639,7 +639,7 @@ export const RateGameDetail = ({ gameId, navigation }) => {
                 setIsPlayed(false);
                 setPlayedKey(null);
                 Alert.alert('Success', `${gameData.name} removed from your Played list!`);
-                console.log('✅ Removed from played:', gameData.name);
+                console.log(' Removed from played:', gameData.name);
             } else {
                 // Tilføj til played
                 const playedData = {
@@ -655,7 +655,7 @@ export const RateGameDetail = ({ gameId, navigation }) => {
                 setIsPlayed(true);
                 setPlayedKey(newPlayedRef.key);
                 Alert.alert('Success', `${gameData.name} added to your Played list!`);
-                console.log('✅ Added to played:', gameData.name);
+                console.log(' Added to played:', gameData.name);
             }
         } catch (error) {
             console.error('Error toggling played:', error);
