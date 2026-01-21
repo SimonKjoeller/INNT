@@ -42,6 +42,8 @@ export default function FollowNotifications() {
     })();
   }, []);
 
+
+  
   useEffect(() => {
     // Cleanup previous listener if user changes
     if (unsubscribeRef.current) {

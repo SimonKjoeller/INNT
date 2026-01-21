@@ -26,7 +26,7 @@ const normalizeGenres = (genres) => {
 
 const BrowseByScreen = ({ route, navigation }) => {
   const { mode = 'genre', genreName, limit = 24 } = route.params || {};
-  const genreKey = useMemo(() => (genreName || '').toLowerCase(), [genreName]);
+  const genreKey = useMemo(() => (genreName || '').toLowerCase(), [genreName]); // Normalize for matching
   const [games, setGames] = useState([]);
   const [targetCount, setTargetCount] = useState(limit || 24);
   const [isFetching, setIsFetching] = useState(false);
@@ -34,7 +34,7 @@ const BrowseByScreen = ({ route, navigation }) => {
   const [filterSort, setFilterSort] = useState(null); // 'Newest' | 'Oldest' | null
   const [filterGenre, setFilterGenre] = useState(null); // e.g. 'Adventure', 'Shooter', etc.
 
-  useLayoutEffect(() => {
+  useLayoutEffect(() => { 
     // Always use genreName if present, otherwise fallback to mode or 'Browse'
     let navTitle = genreName || 'Browse';
     if (!genreName) {
@@ -77,8 +77,8 @@ const BrowseByScreen = ({ route, navigation }) => {
         const isUpcoming = mode === 'upcoming';
         while (true) {
           const q = isUpcoming
-            ? query(gamesRef, orderByChild('first_release_date'), limitToLast(limitToTry))
-            : query(gamesRef, orderByChild('reviewCount'), limitToLast(limitToTry));
+            ? query(gamesRef, orderByChild('first_release_date'), limitToLast(limitToTry)) // Dette er et if statement, så hvis det er Upcoming, så brug denne query
+            : query(gamesRef, orderByChild('reviewCount'), limitToLast(limitToTry));       // Ellers brug denne query
           const snap = await get(q);
           if (!snap.exists()) break;
           const arr = [];

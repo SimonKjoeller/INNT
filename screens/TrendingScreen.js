@@ -1,4 +1,4 @@
-
+/*
 import React, { useState, useLayoutEffect } from 'react';
 import navigationStyles from '../styles/navigationStyles';
 import FullTrendingGames from '../components/FullTrendingGames';
@@ -28,4 +28,4 @@ const TrendingScreen = ({ navigation }) => {
 import { TouchableOpacity } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 
-export default TrendingScreen;
+export default TrendingScreen;*/

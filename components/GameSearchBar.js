@@ -4,6 +4,10 @@ import { ref, get, query, orderByChild, startAt, endAt, limitToFirst } from 'fir
 import { db } from '../database/firebase';
 import styles from '../styles/searchScreenStyles';
 
+
+
+
+
 const GameSearchBar = ({ navigation }) => {
   const [searchText, setSearchText] = useState('');
   const [suggestions, setSuggestions] = useState([]);
@@ -97,8 +101,8 @@ const GameSearchBar = ({ navigation }) => {
         // så returner tom liste — du kan genbruge fallback-strategi fra tidligere hvis ønsket.
         console.log('[GameSearchBar] fetchSuggestions - indexed query gav ingen resultater for node:', node);
       }
-
-      setSuggestions(results);
+;
+      setSuggestions(results)
     } catch (error) {
       console.error('Error fetching suggestions:', error);
       setSuggestions([]);

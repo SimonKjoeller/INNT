@@ -10,6 +10,25 @@ import {
 import { ref, set, get, onValue, off, serverTimestamp as _serverTimestamp } from 'firebase/database';
 
 const AuthContext = createContext();
+/**
+ * Overblik over Auth-arkitekturen
+ *
+ * - "user": Rå Firebase Auth-bruger (token, uid, displayName m.m.).
+ * - "profile": Udvidet brugerprofil hentet fra Realtime Database (RTDB) under `users/<uid>`.
+ * - "username": Praktisk, afledt felt til visning/søgning; hentes i rækkefølgen RTDB.username -> RTDB.displayName -> Auth.displayName.
+ * - "initializing": True indtil første auth-state er modtaget; brug det til at gate UI (fx Loading vs. Login).
+ * - "error"/"loadingAction": Simpele UI-flags til at vise fejl eller spindere under login/signup.
+ *
+ * Livscyklus & lyttere
+ * - Vi sætter én auth-lytter (onAuthStateChanged). Den holder "user" opdateret og slår initializing fra.
+ * - Når "user" skifter, sætter vi en RTDB-lytter på `users/<uid>` for at få live profilændringer.
+ * - Alle lyttere ryddes op (unsubscribe/off) i cleanup for at undgå memory leaks.
+ *
+ * Datamodellen
+ * - Unikt brugernavn reserveres under `usernames/<username_lower>` for hurtig konflikt-tjek.
+ * - Profiler gemmes både under `users/<uid>` og `usersByUsername/<username_lower>` for fleksibel opslag.
+ * - Feltet `username_lower` gemmes eksplicit for case-insensitive søgning og indexering i Firebase rules.
+ */
 
 
   // Auth context provider
@@ -24,6 +43,8 @@ export function AuthProvider({ children }) {
   const [initializing, setInitializing] = useState(true); // Første loading state
   const [error, setError] = useState(null); // Simpelt error state
   const [loadingAction, setLoadingAction] = useState(false); // Login/signup in progress
+  // Bemærk: Disse UI-states er lokalt for AuthProvider. Andre skærme bør bruge dem via context
+  // (fx til at disable knapper eller vise fejl), men undgå at lave egne kopier af dem.
 
 
 
@@ -39,6 +60,11 @@ export function AuthProvider({ children }) {
   // Så du kan vise det rigtige indhold: f.eks. “Loading…” mens du venter, 
     // login-skærm hvis ingen er logget ind, eller brugerens dashboard hvis de er.
   useEffect(() => {
+    // Dyb forklaring:
+    // onAuthStateChanged er en global observer på auth-sessions.
+    // Den fyres ved app-start (for cached session), login, logout og token-refresh.
+    // Vi gemmer hele brugerobjektet, da det indeholder nyttig metadata (uid/displayName) og token-håndtering.
+    // Når første hændelse er modtaget, er app’en ikke længere i "initializing"-tilstand.
     // Lytteren får besked fra Firebase når:
     // 1) App starter og den tjekker om en bruger-session ligger gemt (cached/persistent)
     // 2) Bruger logger ind
@@ -61,8 +87,17 @@ export function AuthProvider({ children }) {
       unsubscribe();
     };
   }, []); // Tom dependency array: vi skal kun sætte lytteren én gang
+  
+  
+  
+
+  
   // Hent og hold profil/brugernavn opdateret i realtime når bruger ændres
   useEffect(() => {
+    // Dyb forklaring:
+    // RTDB-lytteren giver realtidsopdateringer af profilfelter (fx displayName, stats).
+    // Ved logout (ingen uid) nulstiller vi profil/username for at undgå stale data.
+    // Vi afleder "username" i denne lytter for at centralisere logikken ét sted.
     if (!user?.uid) {
       setProfile(null);
       setUsername(null);
@@ -88,6 +123,14 @@ export function AuthProvider({ children }) {
 
   // Signup funktion
   const signup = useCallback(async ({ email, password, username }) => {
+    // Dyb forklaring:
+    // 1) Valider og normaliser brugernavn til lowercase ("usernameKey").
+    // 2) Tjek unikhed under `usernames/<usernameKey>` for at undgå kollisioner.
+    // 3) Opret auth-bruger og opdater displayName for enkel visning.
+    // 4) Skriv profil flere steder i RTDB (pr. username og pr. uid) for fleksibel opslag.
+    // 5) Inkludér `username_lower` for effektiv prefix-søgning (kræver index i rules).
+    // NB: `serverTimestamp` (importeret som `_serverTimestamp`) kan bruges hvis du vil have
+    //     serverside-tidsstempler i stedet for clientens `Date.now()`. Her bruges client-tid.
     setError(null);
     setLoadingAction(true);
     try {
@@ -148,6 +191,8 @@ export function AuthProvider({ children }) {
 
   // Login funktion
   const login = useCallback(async ({ email, password }) => {
+    // Simpel login-wrapper omkring Firebase Auth.
+    // Ved succes opdateres auth-lytter automatisk (user + initializing=false).
     setError(null);
     setLoadingAction(true);
     try {
@@ -165,6 +210,8 @@ export function AuthProvider({ children }) {
 
   // Logout funktion
   const logout = useCallback(async () => {
+    // Logger brugeren ud. RTDB-lytteren vil blive afregistreret af effect ovenfor
+    // når `user?.uid` bliver null, og UI kan reagere (fx gå til login-skærm).
     setError(null);
     try {
       await signOut(auth);
@@ -187,6 +234,10 @@ export function AuthProvider({ children }) {
     login,
     logout,
   }; 
+  // Best practice for forbrug:
+  // - Brug `useAuth()` i skærme/komponenter for at hente disse værdier.
+  // - Tjek `initializing` før du viser privat indhold.
+  // - Brug `error`/`loadingAction` til at styre UI-feedback under auth-handlinger.
 
 
 
@@ -199,3 +250,7 @@ export function AuthProvider({ children }) {
 }
 
 export const useAuth = () => useContext(AuthContext);
+// Hook-brug:
+// - Kald `const { user, profile, username, signup, login, logout } = useAuth();`
+// - Undgå at kalde hooks betinget; wrap betinget rendering rundt om brugen af værdierne.
+// - Del ikke `value` via andre contexts for at undgå desynkronisering; brug denne ene kilde.

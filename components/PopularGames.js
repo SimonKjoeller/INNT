@@ -38,8 +38,8 @@ const PopularGames = ({ navigation }) => {
                 snapshot.forEach((childSnapshot) => {
                     const gameData = childSnapshot.val();
                     const entry = {
-                        firebaseKey: childSnapshot.key, 
-                        id: gameData?.id || childSnapshot.key, 
+                        firebaseKey: childSnapshot.key, // Game ID
+                        id: gameData?.id || childSnapshot.key, // 
                         ...gameData // Tilføj alle andre egenskaber for spillet
                     };
                     gamesArray.push(entry);

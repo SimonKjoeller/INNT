@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+/*import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Image } from 'react-native';
 import { ref, get, query, orderByChild, limitToLast } from 'firebase/database';
 import { db } from '../database/firebase';
@@ -7,24 +7,35 @@ import globalStyles from '../styles/globalStyles';
 import sessionCache from '../caching/sessionCache';
 import listCache from '../caching/listCache';
 
+// Komponent: Viser en fuld oversigt over "Trending" spil.
+// Strategi:
+// 1) Hent top 100 spil efter reviewCount (antager at reviewCount er indekseret i RTDB rules).
+// 2) Vend resultatet så de højeste værdier kommer først.
+// 3) Udvælg de 32 nyeste blandt disse 100 baseret på first_release_date.
+// 4) Cache kun de 32 viste elementer i sessionCache/listCache for hurtigere navigation.
 const FullTrendingGames = ({ navigation }) => {
+    // State: liste over trending-spil + simpel loading-flag til UI
     const [trendingGames, setTrendingGames] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        // Ved mount: hent data én gang
         fetchTrendingGames();
     }, []);
 
     const fetchTrendingGames = async () => {
         try {
+            // 1) Opsæt reference og query: sorter efter reviewCount og tag de sidste 100 (højeste værdier)
             const gamesRef = ref(db, 'games');
             const topGamesQuery = query(
                 gamesRef,
                 orderByChild('reviewCount'),
                 limitToLast(100)
             );
+            // 2) Læs snapshottet én gang (ingen realtime-lytning her)
             const snapshot = await get(topGamesQuery);
             if (snapshot.exists()) {
+                // 3) Byg et array af spil-entries (inkl. firebaseKey og fallback-id)
                 const gamesArray = [];
                 snapshot.forEach((childSnapshot) => {
                     const gameData = childSnapshot.val();
@@ -35,12 +46,15 @@ const FullTrendingGames = ({ navigation }) => {
                     };
                     gamesArray.push(entry);
                 });
+                // 4) Firebase returnerer stigende rækkefølge -> vend for at få "størst reviewCount først"
                 gamesArray.reverse();
                 // Select 32 newest by release date
+                // 5) Blandt top 100: filtrér dem med first_release_date, sorter nyeste først og tag de første 32
                 const newest32 = gamesArray
                     .filter(game => game.first_release_date)
                     .sort((a, b) => new Date(b.first_release_date) - new Date(a.first_release_date))
                     .slice(0, 32);
+                // 6) Cache kun de faktiske 32 viste spil for hurtigere gensyn og navigation
                 // Cache only the 32 items we actually show
                 try {
                     for (const entry of newest32) {
@@ -57,16 +71,20 @@ const FullTrendingGames = ({ navigation }) => {
                 } catch (e) {
                     console.log('[FullTrendingGames] cache loop error', e?.message || e);
                 }
+                // 7) Opdater state med de udvalgte 32
                 setTrendingGames(newest32);
             }
         } catch (error) {
+            // Fejlhåndtering: log til konsol og fortsæt til finally for at slå loading fra
             console.error('Error fetching trending games:', error);
         } finally {
+            // Slå loading fra uanset udfald
             setLoading(false);
         }
     };
 
     const handleGamePress = (game) => {
+        // Navigation: gå til RateGame og medbring firebaseKey som gameId
         navigation.navigate('RateGame', { gameId: game.firebaseKey });
     };
 
@@ -80,18 +98,21 @@ const FullTrendingGames = ({ navigation }) => {
     }
 
     // Normalize image field for compatibility
+    // Sørg for et konsistent billedfelt ved at vælge coverUrl eller image som kilde
     const normalizedGames = trendingGames.map(g => {
         const imageCandidate = g.coverUrl || g.image || null;
         return { ...g, image: imageCandidate };
     });
 
     // Group games into rows of 4
+    // Layout: opdel i rækker á 4 for grid-agtig visning i ScrollView
     const gameRows = [];
     for (let i = 0; i < normalizedGames.length; i += 4) {
         gameRows.push(normalizedGames.slice(i, i + 4));
     }
 
     const renderGameCard = (game) => {
+        // Håndter både lokale (number) og eksterne (string URI) image-kilder
         let imageSource = null;
         if (typeof game.image === 'number') {
             imageSource = game.image;
@@ -111,6 +132,7 @@ const FullTrendingGames = ({ navigation }) => {
     };
 
     const renderRow = (games, rowIndex) => (
+        // Render én række af 4 kort
         <View key={rowIndex} style={styles.row}>
             {games.map(game => renderGameCard(game))}
         </View>
@@ -123,6 +145,7 @@ const FullTrendingGames = ({ navigation }) => {
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={[globalStyles.scrollContent, styles.scrollContent]}
             >
+                {/* Render alle rækker *//*
                 {gameRows.map((row, index) => renderRow(row, index))}
             </ScrollView>
         </View>
@@ -130,3 +153,4 @@ const FullTrendingGames = ({ navigation }) => {
 };
 
 export default FullTrendingGames;
+/*;*/

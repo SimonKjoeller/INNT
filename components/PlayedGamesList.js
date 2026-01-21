@@ -82,6 +82,7 @@ const PlayedGamesList = ({ navigation, userId, sortMode = 'added_desc' }) => {
                     }
                 });
 
+                // Her matches 
                 // Merge spil-data først, så played-itemets egne felter (fx. tilføjelses-timestamp) bevares
                 const enrichedPlayed = playedArray.map(playedItem => {
                     const match = gamesById[playedItem.game_id];

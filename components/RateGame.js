@@ -141,6 +141,7 @@ export const RateGameList = ({ navigation }) => {
     );
 };
 
+// Main funktion - rate et spil VIGTIG
 // ===== RATING MODAL COMPONENT =====
 const RatingModal = ({ visible, onClose, gameData, onSubmitRating, existingRating }) => {
     const [rating, setRating] = useState(existingRating?.rating || 5.0);
@@ -245,6 +246,7 @@ const RatingModal = ({ visible, onClose, gameData, onSubmitRating, existingRatin
     );
 };
 
+// Main funktion - se detaljer for spil
 // ===== GAME DETAIL COMPONENT =====
 export const RateGameDetail = ({ gameId, navigation }) => {
     const gameIdStr = String(gameId);
@@ -490,6 +492,8 @@ export const RateGameDetail = ({ gameId, navigation }) => {
         }
     };
 
+
+    // VIGTIG - Håndter rating submission (opret/ændr)
     const handleSubmitRating = async (rating, comment) => {
         try {
             if (!currentUserId) {
@@ -503,11 +507,13 @@ export const RateGameDetail = ({ gameId, navigation }) => {
             const existingSnapshot = await get(ratingsRef);
             let existingRatingKey = null;
 
+            // Tjekker om der allerede findes en rating for dette spil og bruger
             if (existingSnapshot.exists()) {
                 const ratings = existingSnapshot.val();
                 const existingEntry = Object.entries(ratings).find(
                     ([key, ratingObj]) => ratingObj.game_id === gameInternalId && ratingObj.user_id === currentUserId
                 );
+                // Hvis fundet, gem nøglen til opdatering
                 if (existingEntry) {
                     existingRatingKey = existingEntry[0];
                 }
@@ -515,6 +521,7 @@ export const RateGameDetail = ({ gameId, navigation }) => {
 
             const roundedRating = formatRating(rating); // Round to nearest 0.5
 
+            // Forbered rating-data
             const ratingData = {
                 game_id: gameInternalId,
                 user_id: currentUserId,
@@ -523,16 +530,19 @@ export const RateGameDetail = ({ gameId, navigation }) => {
                 timestamp: new Date().toISOString(),
             };
 
+            // Opret eller opdater rating i databasen
             let createdNew = false;
             if (existingRatingKey) {
                 await set(ref(db, `userRatings/${existingRatingKey}`), ratingData);
                 console.log(' Updated rating:', rating);
             } else {
-                await set(push(ratingsRef), ratingData);
+                await set(push(ratingsRef), ratingData);    
                 createdNew = true;
                 console.log(' Created rating:', roundedRating);
             }
 
+
+            // NOTIFIKATION LOGIK FOR NYE RATINGS
             // Foreground-only follower notifications: only notify on first rating of a game by this user
             if (createdNew) {
                 try {

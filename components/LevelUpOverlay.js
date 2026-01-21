@@ -1,3 +1,4 @@
+// UseMemo sørger 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { View, Text, Animated, TouchableOpacity, Dimensions } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
