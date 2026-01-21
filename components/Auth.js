@@ -91,7 +91,7 @@ export function AuthProvider({ children }) {
   
   
 
-  
+
   // Hent og hold profil/brugernavn opdateret i realtime når bruger ændres
   useEffect(() => {
     // Dyb forklaring:
@@ -122,15 +122,9 @@ export function AuthProvider({ children }) {
 
 
   // Signup funktion
+  // useCallback sikrer at funktionen ikke re-defineres ved hver render
   const signup = useCallback(async ({ email, password, username }) => {
-    // Dyb forklaring:
-    // 1) Valider og normaliser brugernavn til lowercase ("usernameKey").
-    // 2) Tjek unikhed under `usernames/<usernameKey>` for at undgå kollisioner.
-    // 3) Opret auth-bruger og opdater displayName for enkel visning.
-    // 4) Skriv profil flere steder i RTDB (pr. username og pr. uid) for fleksibel opslag.
-    // 5) Inkludér `username_lower` for effektiv prefix-søgning (kræver index i rules).
-    // NB: `serverTimestamp` (importeret som `_serverTimestamp`) kan bruges hvis du vil have
-    //     serverside-tidsstempler i stedet for clientens `Date.now()`. Her bruges client-tid.
+  
     setError(null);
     setLoadingAction(true);
     try {
@@ -166,6 +160,7 @@ export function AuthProvider({ children }) {
             level: 0,
           },
         };
+        
         // reservation af brugernavn (key er allerede lowercase)
         await set(ref(db, `usernames/${usernameKey}`), { uid: cred.user.uid, createdAt: Date.now() });
         // profil gemt pr. brugernavn (inkl. username_lower)

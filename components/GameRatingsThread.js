@@ -29,6 +29,7 @@ const formatDate = (ts) => {
     }
 };
 
+// Component to display community ratings with comments for a specific game
 const GameRatingsThread = ({ gameInternalId, currentUserId, includeSelf = true }) => {
     const [items, setItems] = useState([]);
     const [loading, setLoading] = useState(true);

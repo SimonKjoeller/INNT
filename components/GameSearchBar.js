@@ -32,7 +32,6 @@ const GameSearchBar = ({ navigation }) => {
   // - For games: hver spil-post bør have name_lower og rules skal indeholde ".indexOn": ["name_lower"].
   // - For profiles: hver user-post bør have username_lower og rules skal indeholde ".indexOn": ["username_lower"].
   // Alternativt kan du tilføje name_lower ved import/oprettelse af spil.
-
   useEffect(() => {
     // Debounce for at reducere antal queries ved hurtig indtastning
     if (debounceRef.current) clearTimeout(debounceRef.current);

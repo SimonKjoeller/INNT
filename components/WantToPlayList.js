@@ -55,11 +55,13 @@ const WantToPlayList = ({ navigation, userId, sortMode = 'added_desc' }) => {
             if (wishlistSnapshot.exists()) {
                 const wishlistData = wishlistSnapshot.val();
                 const wishlistArray = Object.keys(wishlistData).map(key => ({
+                    // Tilføj Firebase key som felt for navigation og identifikation
                     ...wishlistData[key],
                     wishlistKey: key
                 }));
 
                 // Hent kun de spil som findes i wishlisten (undgår at hente hele 'games' tabellen)
+                // Vi henter disse da vi skal bruge mere spildata for at vise i listen
                 const gamesRef = ref(database, 'games');
                 const uniqueIds = [...new Set(wishlistArray.map(w => w.game_id))];
 
@@ -68,9 +70,12 @@ const WantToPlayList = ({ navigation, userId, sortMode = 'added_desc' }) => {
                     get(query(gamesRef, orderByChild('id'), equalTo(id)))
                 );
 
+                // i gameSnapshots har vi nu en array af snapshots for hvert spil
                 const gameSnapshots = await Promise.all(gameFetchPromises);
 
                 // Byg map fra internal id -> { firebaseKey, data }
+                // dette gør det nemt at merge senere
+                // her der sørger vi for at hente firebaseKey og data for hvert spil
                 const gamesById = {};
                 gameSnapshots.forEach(snap => {
                     if (snap.exists()) {

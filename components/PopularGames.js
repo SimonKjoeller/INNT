@@ -7,10 +7,13 @@ import sessionCache from '../caching/sessionCache'; // Session-cache til at genb
 import listCache from '../caching/listCache'; // Track list-sourced cached keys
 
 const PopularGames = ({ navigation }) => {
+    
+    // useState virker ved at holde styr på komponentens tilstand og renderer UI når tilstanden ændres
     const [popularGames, setPopularGames] = useState([]); // State til at gemme populære spil
     const [loading, setLoading] = useState(true); // State til at vise "Loading..." mens data hentes
 
     // useEffect kaldes kun én gang når komponenten indlæses
+    // useEffect gør det muligt at udføre sideeffekter i funktionelle komponenter
     useEffect(() => {
         fetchPopularGames();
     }, []);

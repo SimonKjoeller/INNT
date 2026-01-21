@@ -61,12 +61,17 @@ export default function ProfileScreen() {
       setFollowingCount(val ? Object.keys(val).length : 0);
     };
 
+
+    // Opsæt realtime lyttere for at opdatere counts når data ændres
+    // Dette sikrer at UI altid viser opdaterede tal uden manuel refresh
     onValue(wishlistRef, handleWishlist);
     onValue(playedRef, handlePlayed);
     onValue(ratingsQuery, handleRatings);
     onValue(followersRef, handleFollowers);
     onValue(followingRef, handleFollowing);
 
+    // Ryd op lyttere ved unmount eller uid ændring
+    // Unmount betyder at komponenten fjernes fra UI'et
     return () => {
       off(wishlistRef, 'value', handleWishlist);
       off(playedRef, 'value', handlePlayed);
